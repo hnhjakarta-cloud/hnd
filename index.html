@@ -992,6 +992,7 @@
 
     let courierAutoSyncTimer = null;
     let knownCourierOrderIds = new Set();
+    let knownOrderAssignments = {};
 
     function playCourierOrderSound() {
       try {
@@ -1069,19 +1070,87 @@
       }, 8000);
     }
 
+    function notifyCourierAssignmentUpdate(orderObj) {
+      if (!orderObj || !currentUser || currentUser.role !== 'kurir') return;
+      playCourierOrderSound();
+      updateCourierOrderBadgeCount();
+
+      const isMine = String(orderObj.courier_id) === String(currentUser.user_id);
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const existingBanner = document.getElementById('notif_order_' + orderObj.order_id);
+      if (existingBanner) existingBanner.remove();
+
+      const banner = document.createElement('div');
+      banner.id = 'notif_order_' + orderObj.order_id;
+      banner.className = `pointer-events-auto ${isMine ? 'bg-[#053f28] border-[#fde002]' : 'bg-slate-800 border-slate-400'} text-white border-2 rounded-2xl p-4 shadow-2xl transition-all duration-300 space-y-2`;
+      banner.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl ${isMine ? 'bg-[#fde002] text-[#053f28]' : 'bg-slate-600 text-white'} flex items-center justify-center font-black text-sm">
+              <i class="fa-solid ${isMine ? 'fa-user-check' : 'fa-circle-info'}"></i>
+            </span>
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-wider ${isMine ? 'text-[#fde002]' : 'text-amber-300'}">
+                ${isMine ? 'TUGAS PENGIRIMAN UNTUK ANDA!' : 'INFO PENUGASAN KURIR'}
+              </p>
+              <h4 class="font-extrabold text-xs text-white">${orderObj.order_id} — ${orderObj.customer_name}</h4>
+            </div>
+          </div>
+          <button onclick="this.closest('div.pointer-events-auto').remove()" class="text-white/70 hover:text-white text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <p class="text-[11px] text-white/95 leading-relaxed">
+          Order ini telah ditugaskan oleh Admin kepada: <b class="text-[#fde002]">${orderObj.courier_name}</b>
+        </p>
+        ${isMine ? `
+          <div class="flex gap-2 pt-1">
+            <button onclick="navigateTo('kurir_pengiriman'); this.closest('div.pointer-events-auto').remove();" class="flex-1 py-1.5 px-3 rounded-xl bg-[#fde002] text-[#053f28] font-black text-[11px]">
+              Buka Menu Pengiriman Sekarang
+            </button>
+          </div>
+        ` : ''}
+      `;
+      container.prepend(banner);
+      setTimeout(() => {
+        if (banner && banner.parentNode) banner.remove();
+      }, 9000);
+    }
+
     function checkAndHandleIncomingCourierOrders(newOrdersArray) {
       if (!Array.isArray(newOrdersArray)) return;
       const newlyAdded = newOrdersArray.filter(o => !knownCourierOrderIds.has(String(o.order_id)));
-      newOrdersArray.forEach(o => knownCourierOrderIds.add(String(o.order_id)));
+      const newlyAssigned = [];
+
+      newOrdersArray.forEach(o => {
+        const oid = String(o.order_id);
+        const prevCourier = knownOrderAssignments[oid] || '';
+        const currCourier = String(o.courier_id || '');
+        if (knownCourierOrderIds.has(oid) && currCourier !== '' && currCourier !== prevCourier) {
+          newlyAssigned.push(o);
+        }
+        knownCourierOrderIds.add(oid);
+        knownOrderAssignments[oid] = currCourier;
+      });
+
       updateCourierOrderBadgeCount();
-      if (newlyAdded.length > 0 && currentUser && currentUser.role === 'kurir') {
-        notifyCourierIncomingOrder(newlyAdded);
+      if (currentUser && currentUser.role === 'kurir') {
+        if (newlyAdded.length > 0) {
+          notifyCourierIncomingOrder(newlyAdded);
+        }
+        newlyAssigned.forEach(ord => notifyCourierAssignmentUpdate(ord));
       }
     }
 
     function startCourierAutoSync() {
       if (courierAutoSyncTimer) clearInterval(courierAutoSyncTimer);
       knownCourierOrderIds = new Set((DB.HH_ORDERS || []).map(o => String(o.order_id)));
+      knownOrderAssignments = {};
+      (DB.HH_ORDERS || []).forEach(o => {
+        knownOrderAssignments[String(o.order_id)] = String(o.courier_id || '');
+      });
       updateCourierOrderBadgeCount();
 
       window.addEventListener('storage', (ev) => {
@@ -1407,8 +1476,7 @@
 
     function renderKurirMobilePesanan(container) {
       const incomingOrders = DB.HH_ORDERS.filter(o =>
-        !['Berhasil terkirim', 'Gagal terkirim'].includes(o.status) &&
-        (!o.courier_id || o.courier_id === '' || String(o.courier_id) === String(currentUser.user_id))
+        !['Berhasil terkirim', 'Gagal terkirim'].includes(o.status)
       );
 
       updateCourierOrderBadgeCount();
@@ -1417,7 +1485,7 @@
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
             <h3 class="font-extrabold text-base text-[#053f28]"><i class="fa-solid fa-bell-concierge mr-1.5"></i> Pesanan Masuk & Lokasi Customer</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Daftar pesanan dari Admin/Gudang beserta informasi lengkap customer & titik lokasi pengantaran.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Semua kurir dapat melihat info pesanan masuk & status kurir yang ditugaskan oleh Admin.</p>
           </div>
           <span class="px-3 py-1 rounded-xl bg-[#053f28] text-[#fde002] font-black text-xs shrink-0">${incomingOrders.length} Order</span>
         </div>
@@ -1432,8 +1500,11 @@
             const latCoord = o.lat || (custRecord && custRecord.lat) || -6.25;
             const lngCoord = o.lng || (custRecord && custRecord.lng) || 106.86;
             const gmapsLocationUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(o.customer_address)}`;
+            const isAssigned = Boolean(o.courier_id && String(o.courier_id).trim() !== '');
+            const isAssignedToMe = isAssigned && String(o.courier_id) === String(currentUser.user_id);
+
             return `
-              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-[#053f28] transition shadow-xs p-5 space-y-4">
+              <div class="bg-white rounded-2xl border-2 ${isAssignedToMe ? 'border-[#053f28]' : 'border-slate-200'} transition shadow-xs p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                   <div>
                     <div class="flex items-center gap-2">
@@ -1446,6 +1517,29 @@
                   </div>
                   ${statusBadgeHTML(o.status)}
                 </div>
+
+                <!-- Banner Status Penugasan Kurir -->
+                ${isAssigned ? `
+                  <div class="p-3 rounded-xl border ${isAssignedToMe ? 'bg-emerald-50 border-emerald-300 text-[#053f28]' : 'bg-amber-50 border-amber-200 text-amber-900'} flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2">
+                      <i class="fa-solid ${isAssignedToMe ? 'fa-user-check text-emerald-600' : 'fa-lock text-amber-600'} text-base"></i>
+                      <div>
+                        <p class="font-extrabold">${isAssignedToMe ? 'Order Ini Ditugaskan Kepada Anda!' : `Sudah Ditugaskan ke: ${o.courier_name}`}</p>
+                        <p class="text-[11px] opacity-80">${isAssignedToMe ? 'Silakan buka menu Pengiriman untuk memulai perjalanan.' : 'Hanya kurir yang ditugaskan yang dapat menjalankan pengiriman ini.'}</p>
+                      </div>
+                    </div>
+                    ${isAssignedToMe ? `
+                      <button onclick="navigateTo('kurir_pengiriman')" class="px-3 py-1.5 rounded-lg bg-[#053f28] text-[#fde002] font-black text-[11px] shrink-0">
+                        Mulai Kirim →
+                      </button>
+                    ` : ''}
+                  </div>
+                ` : `
+                  <div class="p-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 flex items-center gap-2 text-xs">
+                    <i class="fa-solid fa-clock text-slate-500"></i>
+                    <span><b>Menunggu Penugasan Admin:</b> Belum ada kurir yang ditugaskan untuk order ini.</span>
+                  </div>
+                `}
 
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-3">
                   <div class="flex items-center justify-between">
@@ -1507,17 +1601,124 @@
     }
 
     function renderKurirMobilePengiriman(container) {
+      // HANYA TAMPILKAN ORDER YANG DITUGASKAN KE KURIR YANG SEDANG LOGIN INI SAJA
       const activeOrders = DB.HH_ORDERS.filter(o =>
         !['Berhasil terkirim', 'Gagal terkirim'].includes(o.status) &&
-        (String(o.courier_id) === String(currentUser.user_id) ||
-        ['Siap dikirim', 'Kurir ditugaskan', 'Dalam perjalanan', 'Tiba di lokasi'].includes(o.status))
+        String(o.courier_id) === String(currentUser.user_id)
       );
 
-      const selectedOrd = activeOrders.length ? activeOrders[0] : DB.HH_ORDERS[0];
+      const selectedOrd = activeOrders.length ? activeOrders[0] : null;
       const topMapsUrl = selectedOrd
         ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedOrd.customer_address)}`
         : 'https://www.google.com/maps';
 
+      container.innerHTML = `
+        <div class="bg-[#053f28] text-white rounded-2xl p-4 shadow-md border-b-4 border-[#fde002] flex items-center justify-between gap-3">
+          <div>
+            <h3 class="font-extrabold text-sm text-[#fde002]"><i class="fa-solid fa-map-location-dot mr-1.5"></i> Live Tracking Peta & Navigasi</h3>
+            <p id="courierGpsCoordText" class="text-[11px] text-white/80 mt-0.5">
+              GPS: ${lastGpsCoord.lat.toFixed(4)}, ${lastGpsCoord.lng.toFixed(4)}
+            </p>
+          </div>
+          <button onclick="toggleCourierGPS(${!gpsActive})"
+            class="py-2.5 px-4 rounded-xl font-extrabold text-xs shadow-md transition flex items-center gap-1.5 shrink-0 ${
+              gpsActive ? 'bg-rose-600 text-white' : 'bg-[#fde002] text-[#053f28]'
+            }">
+            <i class="fa-solid ${gpsActive ? 'fa-stop' : 'fa-satellite-dish'}"></i>
+            ${gpsActive ? 'Matikan GPS' : 'Aktifkan GPS'}
+          </button>
+        </div>
+
+        ${activeOrders.length > 0 ? `
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <label class="text-xs font-extrabold text-[#053f28]">Pilih Rute Tugas Pengiriman Anda (${activeOrders.length}):</label>
+              <button onclick="simulateCourierMovementOnMap()" class="px-3 py-1 rounded-lg bg-[#fde002] text-[#053f28] text-[11px] font-extrabold">
+                <i class="fa-solid fa-route mr-1"></i> Simulasi Gerak
+              </button>
+            </div>
+            <select id="trackingOrderSelect" onchange="onCourierSelectRouteOrder(this.value)" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-[#053f28] bg-hh-50">
+              ${activeOrders.map(o => `<option value="${o.order_id}">${o.order_id} — ${o.customer_name} (${o.status})</option>`).join('')}
+            </select>
+
+            <div id="mainTrackingMap" class="w-full h-[300px] rounded-2xl border border-slate-200"></div>
+
+            <a id="topSelectedOrderMapsBtn" href="${topMapsUrl}" target="_blank" rel="noopener noreferrer"
+              class="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition">
+              <i class="fa-solid fa-diamond-turn-right text-base"></i> Buka Navigasi Google Maps ke Lokasi Tujuan
+            </a>
+          </div>
+
+          <div class="space-y-3">
+            ${activeOrders.map(o => {
+              const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(o.customer_address)}`;
+              return `
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="font-black text-xs text-[#053f28]">${o.order_id}</span>
+                      <h4 class="font-extrabold text-sm text-slate-900">${o.customer_name}</h4>
+                      <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${o.customer_address}</p>
+                    </div>
+                    ${statusBadgeHTML(o.status)}
+                  </div>
+                  <div class="grid grid-cols-1 gap-2">
+                    <a href="${gmapsUrl}" target="_blank" rel="noopener noreferrer"
+                      class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm">
+                      <i class="fa-solid fa-diamond-turn-right text-sm"></i> Buka Navigasi Google Maps
+                    </a>
+
+                    ${o.status === 'Dalam perjalanan' ? `
+                      <button onclick="courierUpdateOrderStep('${o.order_id}', 'Tiba di lokasi')"
+                        class="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-location-crosshairs"></i> Konfirmasi Tiba di Lokasi
+                      </button>
+                    ` : o.status === 'Tiba di lokasi' ? `
+                      <button onclick="openProofUploadModal('${o.order_id}')"
+                        class="w-full py-3 rounded-xl bg-[#053f28] text-[#fde002] font-extrabold text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-camera"></i> Ambil Foto Bukti Kirim
+                      </button>
+                    ` : `
+                      <button onclick="courierUpdateOrderStep('${o.order_id}', 'Dalam perjalanan')"
+                        class="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-motorcycle"></i> Mulai Jalan Sekarang
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : `
+          <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-2">
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-xl mx-auto">
+              <i class="fa-solid fa-truck-Clock"></i>
+            </div>
+            <h4 class="font-extrabold text-sm text-slate-700">Belum Ada Tugas Pengiriman untuk Anda</h4>
+            <p class="text-xs text-slate-500 max-w-xs mx-auto">Pesanan yang ditugaskan kepada kurir lain tidak akan muncul di sini. Anda hanya dapat menjalankan pesanan yang ditugaskan resmi kepada <b>${currentUser.name}</b>.</p>
+          </div>
+        `}
+      `;
+
+      setTimeout(() => {
+        if (selectedOrd) renderMainTrackingMap(selectedOrd);
+      }, 60);
+    }
+
+    function onCourierSelectRouteOrder(orderId) {
+      updateTrackingDetailPanel(orderId);
+      const ord = DB.HH_ORDERS.find(o => String(o.order_id) === String(orderId));
+      const btn = document.getElementById('topSelectedOrderMapsBtn');
+      if (ord && btn) {
+        btn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ord.customer_address)}`;
+      }
+    }
+
+    function renderKurirMobileRiwayat(container) {
+      const completedOrders = DB.HH_ORDERS.filter(o =>
+        o.status === 'Berhasil terkirim' &&
+        String(o.courier_id) === String(currentUser.user_id)
+      );
       container.innerHTML = `
         <div class="bg-[#053f28] text-white rounded-2xl p-4 shadow-md border-b-4 border-[#fde002] flex items-center justify-between gap-3">
           <div>
@@ -3339,6 +3540,10 @@ Catatan: Antar pagi jam 9</textarea>
     function courierUpdateOrderStep(orderId, newStatus) {
       const ord = DB.HH_ORDERS.find(o => o.order_id === orderId);
       if (!ord) return;
+      if (currentUser && currentUser.role === 'kurir' && String(ord.courier_id) !== String(currentUser.user_id)) {
+        showToast(`Tidak diizinkan! Order ini ditugaskan ke ${ord.courier_name || 'kurir lain'}.`, 'error');
+        return;
+      }
       ord.status = newStatus;
 
       if (newStatus === 'Dalam perjalanan' && !gpsActive) {
@@ -3509,26 +3714,29 @@ Catatan: Antar pagi jam 9</textarea>
         mapInstance = null;
       }
 
-      const courierGps = DB.HH_GPS_LOG[0] || { lat: -6.2580, lng: 106.8651, updated_at: nowFormatted() };
+      const matchedGps = DB.HH_GPS_LOG.find(g => String(g.courier_id) === String(ord.courier_id)) ||
+                         (currentUser && currentUser.role === 'kurir' ? { lat: lastGpsCoord.lat, lng: lastGpsCoord.lng, courier_name: currentUser.name, updated_at: nowFormatted() } : null) ||
+                         DB.HH_GPS_LOG[0] ||
+                         { lat: -6.2580, lng: 106.8651, courier_name: ord.courier_name || 'Kurir', updated_at: nowFormatted() };
       const destLat = ord.lat || -6.2442;
       const destLng = ord.lng || 106.8632;
 
-      mapInstance = L.map('mainTrackingMap').setView([(courierGps.lat + destLat) / 2, (courierGps.lng + destLng) / 2], 13);
+      mapInstance = L.map('mainTrackingMap').setView([(matchedGps.lat + destLat) / 2, (matchedGps.lng + destLng) / 2], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
       }).addTo(mapInstance);
 
-      L.circleMarker([courierGps.lat, courierGps.lng], {
+      L.circleMarker([matchedGps.lat, matchedGps.lng], {
         radius: 10,
         fillColor: '#053f28',
         color: '#fde002',
         weight: 3,
         fillOpacity: 1
-      }).addTo(mapInstance).bindPopup(`<b>Posisi Kurir Saat Ini</b><br>${ord.courier_name || courierGps.courier_name}`).openPopup();
+      }).addTo(mapInstance).bindPopup(`<b>Posisi Kurir Saat Ini</b><br>${ord.courier_name || matchedGps.courier_name}`).openPopup();
 
       L.marker([destLat, destLng]).addTo(mapInstance).bindPopup(`<b>Tujuan: ${ord.customer_name}</b><br>${ord.customer_address}`);
 
-      L.polyline([[courierGps.lat, courierGps.lng], [destLat, destLng]], {
+      L.polyline([[matchedGps.lat, matchedGps.lng], [destLat, destLng]], {
         color: '#053f28',
         weight: 4,
         dashArray: '8, 8'
