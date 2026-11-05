@@ -4,13 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#053f28" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Hanam Hanum" />
   <title>Hanam Hanum Delivery — Sistem Manajemen Pesanan & Pengiriman</title>
 
-  <!-- App Icon untuk Install di HP -->
+  <!-- App Icon & PWA Manifest untuk Install Aplikasi di Semua HP -->
   <link rel="icon" type="image/png" href="https://res.cloudinary.com/div5frz9v/image/upload/v1793775171/Maskot_Jeruk_Ceria_Hanam_Hanum_hssxhn.png" />
   <link rel="apple-touch-icon" href="https://res.cloudinary.com/div5frz9v/image/upload/v1793775171/Maskot_Jeruk_Ceria_Hanam_Hanum_hssxhn.png" />
+  <link id="pwaManifestLink" rel="manifest" href="" />
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -68,6 +71,39 @@
       background-color: #fde002;
       animation: pulse-ring 1.5s infinite;
     }
+    /* Animasi Bola / Maskot Pantul & Bayangan di Bawahnya */
+    @keyframes mascot-bounce {
+      0%, 100% {
+        transform: translateY(-22%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+      }
+      50% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      }
+    }
+    @keyframes shadow-drop {
+      0%, 100% {
+        transform: scale(0.45);
+        opacity: 0.2;
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+      }
+      50% {
+        transform: scale(1.15);
+        opacity: 0.55;
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      }
+    }
+    .animate-mascot-ball {
+      animation: mascot-bounce 0.9s infinite;
+    }
+    .animate-ball-shadow {
+      width: 110px;
+      height: 18px;
+      background: radial-gradient(ellipse at center, rgba(5, 63, 40, 0.55) 0%, rgba(5, 63, 40, 0.2) 55%, rgba(0, 0, 0, 0) 75%);
+      border-radius: 50%;
+      animation: shadow-drop 0.9s infinite;
+    }
     @media print {
       body * { visibility: hidden !important; }
       #printArea, #printArea * { visibility: visible !important; }
@@ -96,13 +132,17 @@
 </head>
 <body class="text-slate-800 antialiased selection:bg-hh-yellow selection:text-hh-500">
 
-  <!-- SPLASH SCREEN 1 DETIK MASKOT -->
+  <!-- SPLASH SCREEN 2 DETIK MASKOT DENGAN BAYANGAN JATUH DI BAWAHNYA -->
   <div id="splashScreen" class="fixed inset-0 z-[99999] bg-white flex flex-col items-center justify-center">
-    <img src="https://res.cloudinary.com/div5frz9v/image/upload/v1793809129/logo_bulet2_l9tzx3.png" 
-         alt="Mascot Hanam Hanum" 
-         class="w-48 sm:w-56 h-auto object-contain mix-blend-multiply animate-bounce"
-         onerror="this.src='https://placehold.co/240x240/ffffff/138a54?text=Hanam+Hanum'" />
-    <div class="mt-4 flex flex-col items-center animate-pulse">
+    <div class="relative flex flex-col items-center justify-center">
+      <img src="https://res.cloudinary.com/div5frz9v/image/upload/v1793809129/logo_bulet2_l9tzx3.png" 
+           alt="Mascot Hanam Hanum" 
+           class="w-44 sm:w-52 h-auto object-contain mix-blend-multiply animate-mascot-ball"
+           onerror="this.src='https://placehold.co/240x240/ffffff/138a54?text=Hanam+Hanum'" />
+      <!-- Bayangan ketika bola/maskot jatuh di bawah -->
+      <div class="animate-ball-shadow -mt-2"></div>
+    </div>
+    <div class="mt-5 flex flex-col items-center animate-pulse">
       <h2 class="text-2xl font-black text-[#138a54] tracking-tight">HANAM HANUM</h2>
       <div class="w-10 h-1.5 bg-[#fde002] rounded-full mt-1.5 mb-1.5"></div>
       <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Delivery System</p>
@@ -156,13 +196,19 @@
     <div class="login-leaf-br"></div>
 
     <div class="w-full max-w-md px-6 relative z-10 flex flex-col items-center">
-      <!-- Logo Section (Tanpa Maskot) -->
-      <div class="flex flex-col items-center mb-8">
+      <!-- Logo Section -->
+      <div class="flex flex-col items-center mb-6">
         <img src="https://res.cloudinary.com/div5frz9v/image/upload/v1793770702/3x3_r3h8mg.png" 
              alt="Hanam Hanum Delivery" 
              class="w-44 sm:w-52 h-auto object-contain z-20"
              onerror="this.src='https://placehold.co/220x120/ffffff/138a54?text=H%26H+Delivery'" />
         <p class="text-[12px] font-bold text-[#138a54] mt-2 tracking-tight text-center">Buah & Sayur Segar, Langsung diantar!</p>
+
+        <!-- Tombol Install Aplikasi di Semua Perangkat HP -->
+        <button type="button" onclick="triggerInstallApp()" class="mt-3 px-4 py-2 rounded-full bg-[#053f28] hover:bg-[#04301e] text-[#fde002] font-extrabold text-[11px] shadow-md flex items-center gap-2 transition border border-[#fde002]/40">
+          <i class="fa-solid fa-mobile-screen-button text-sm"></i>
+          <span>Instal Aplikasi di HP</span>
+        </button>
       </div>
 
       <!-- Dummy buttons untuk kompatibilitas -->
@@ -252,15 +298,19 @@
           </div>
           <div class="relative">
             <i class="fa-solid fa-id-badge absolute left-5 top-3.5 text-slate-400"></i>
-            <select id="regRole" required
+            <select id="regRole" required onchange="handleRegRoleNotice(this.value)"
               class="w-full pl-12 pr-10 py-3 rounded-full border border-slate-300 focus:border-[#138a54] focus:ring-1 focus:ring-[#138a54] outline-none font-bold text-[14px] bg-white text-[#138a54] transition appearance-none">
-              <option value="admin">Admin</option>
-              <option value="gudang">Gudang (QC & Packing)</option>
-              <option value="kurir">Kurir Pengiriman</option>
-              <option value="manager">Manager</option>
-              <option value="pengembang">Pengembang (Developer)</option>
+              <option value="kurir">Kurir Pengiriman (Langsung Aktif)</option>
+              <option value="admin">Admin (Perlu Izin Pengembang)</option>
+              <option value="gudang">Gudang / QC & Packing (Perlu Izin Pengembang)</option>
+              <option value="manager">Manager (Perlu Izin Pengembang)</option>
+              <option id="optRegDeveloper" value="pengembang" disabled>Pengembang / Developer (Sudah Terdaftar - Maks 1)</option>
             </select>
             <i class="fa-solid fa-chevron-down absolute right-5 top-4 text-slate-400 pointer-events-none"></i>
+          </div>
+          <div id="regRoleWarningBox" class="hidden px-4 py-2.5 rounded-2xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 font-semibold leading-relaxed">
+            <i class="fa-solid fa-shield-halved text-amber-600 mr-1"></i>
+            Pendaftaran sebagai <b>Admin, Gudang, atau Manager</b> wajib menunggu konfirmasi / izin dari <b>Pengembang</b> sebelum bisa login.
           </div>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-5 top-3.5 text-slate-400"></i>
@@ -333,6 +383,9 @@
             <span class="w-2 h-2 rounded-full bg-slate-400"></span> Nonaktif
           </span>
         </div>
+        <button onclick="triggerInstallApp()" class="w-full py-2 px-3 rounded-xl bg-hh-50 hover:bg-hh-100 text-[#053f28] border border-hh-200 font-extrabold text-xs flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-download"></i> Instal Aplikasi di HP
+        </button>
         <button onclick="requestLogoutConfirmation()" class="w-full py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs flex items-center justify-center gap-2 transition">
           <i class="fa-solid fa-power-off"></i> Keluar Akun
         </button>
@@ -356,6 +409,9 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <button onclick="triggerInstallApp()" class="px-2.5 py-1 rounded-lg bg-white/15 text-[#fde002] text-[11px] font-bold flex items-center gap-1" title="Instal Aplikasi">
+            <i class="fa-solid fa-download"></i> Instal
+          </button>
           <span id="mobileRoleBadge" class="px-2.5 py-1 rounded-lg bg-[#fde002] text-[#053f28] text-xs font-extrabold uppercase">ADMIN</span>
         </div>
       </header>
@@ -421,8 +477,111 @@
   <!-- APPLICATION JAVASCRIPT ENGINE -->
   <script>
     let wakeLockSentinel = null;
+    let deferredInstallPrompt = null;
 
-    // PROTEKSI KURIR ON TERUS (Mencegah keluar aplikasi via tombol Back & menjaga layar aktif)
+    // 5. KONFIGURASI PWA INSTALLABLE DI SEMUA HANDPHONE (ANDROID & IOS)
+    function setupPWAInstallability() {
+      const iconUrl = 'https://res.cloudinary.com/div5frz9v/image/upload/v1793775171/Maskot_Jeruk_Ceria_Hanam_Hanum_hssxhn.png';
+      const manifestObj = {
+        name: 'Hanam Hanum Delivery',
+        short_name: 'Hanam Hanum',
+        description: 'Aplikasi Manajemen Pesanan & Pengiriman Buah Sayur Segar Hanam Hanum',
+        start_url: window.location.href.split('?')[0],
+        scope: '/',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#ffffff',
+        theme_color: '#053f28',
+        icons: [
+          { src: iconUrl, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+        ]
+      };
+      try {
+        const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+        const manifestURL = URL.createObjectURL(blob);
+        const linkEl = document.getElementById('pwaManifestLink');
+        if (linkEl) linkEl.setAttribute('href', manifestURL);
+      } catch (e) {}
+
+      if ('serviceWorker' in navigator) {
+        try {
+          const swCode = `
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+            self.addEventListener('fetch', (e) => {});
+          `;
+          const swBlob = new Blob([swCode], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(() => {});
+        } catch (err) {}
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+      });
+    }
+
+    async function triggerInstallApp() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('Aplikasi Hanam Hanum sedang diinstal di perangkat Anda!', 'success');
+        }
+        deferredInstallPrompt = null;
+        return;
+      }
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isInIframe = window.self !== window.top;
+
+      openModal('Instal Aplikasi Hanam Hanum di Handphone', `
+        <div class="space-y-4 text-xs text-slate-700">
+          <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-hh-50 border border-hh-200">
+            <img src="https://res.cloudinary.com/div5frz9v/image/upload/v1793775171/Maskot_Jeruk_Ceria_Hanam_Hanum_hssxhn.png" class="w-14 h-14 rounded-2xl object-contain bg-white p-1 border border-hh-200 shrink-0" />
+            <div>
+              <h4 class="font-extrabold text-sm text-[#053f28]">Hanam Hanum Delivery App</h4>
+              <p class="text-[11px] text-slate-600 mt-0.5">Instal sebagai aplikasi penuh (Full Screen) di layar utama HP Android maupun iPhone Anda.</p>
+            </div>
+          </div>
+
+          ${isInIframe ? `
+            <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
+              <p class="font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Catatan Penting Google Apps Script:</p>
+              <p class="text-[11px] mt-0.5">Jika Anda membuka dari link Google Script atau di dalam frame browser, klik menu <b>Titik Tiga (⋮)</b> di pojok kanan atas browser Chrome/Safari Anda lalu pilih <b>"Instal Aplikasi"</b> atau <b>"Tambahkan ke Layar Utama"</b>.</p>
+            </div>
+          ` : ''}
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+              <p class="font-extrabold text-[#053f28]"><i class="fa-brands fa-android text-emerald-600 mr-1 text-sm"></i> Pengguna HP Android (Chrome):</p>
+              <ol class="list-decimal pl-4 space-y-1 text-[11px]">
+                <li>Ketuk ikon <b>Titik Tiga (⋮)</b> di pojok kanan atas browser Chrome.</li>
+                <li>Pilih menu <b>"Instal aplikasi" (Install app)</b> atau <b>"Tambahkan ke layar utama"</b>.</li>
+                <li>Ketuk <b>Instal</b>, maka aplikasi Hanam Hanum akan terpasang di daftar aplikasi HP Anda.</li>
+              </ol>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+              <p class="font-extrabold text-[#053f28]"><i class="fa-brands fa-apple text-slate-800 mr-1 text-sm"></i> Pengguna iPhone / iOS (Safari):</p>
+              <ol class="list-decimal pl-4 space-y-1 text-[11px]">
+                <li>Ketuk tombol <b>Bagikan (Share <i class="fa-solid fa-arrow-up-from-bracket"></i>)</b> di bagian bawah Safari.</li>
+                <li>Geser ke bawah dan pilih <b>"Tambah ke Layar Utama" (Add to Home Screen)</b>.</li>
+                <li>Ketuk <b>Tambah</b> di pojok kanan atas.</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="button" onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-[#053f28] text-[#fde002] font-extrabold">Mengerti</button>
+          </div>
+        </div>
+      `);
+    }
+
+    // PROTEKSI KURIR ON TERUS
     async function activateCourierStayOnProtection() {
       try {
         history.pushState({ courierStayOn: true }, '', window.location.href);
@@ -470,46 +629,54 @@
       }
     });
 
-    // SPLASH SCREEN 1 DETIK & AUTO SYNC DARI SPREADSHEET SAAT BUKA APLIKASI
-    window.addEventListener('DOMContentLoaded', async () => {
-      // Langsung tarik data terbaru dari Google Spreadsheet saat aplikasi dibuka
-      await syncWithGASBackend(false);
+    // 4. SPLASH SCREEN 2 DETIK & AUTO SYNC DARI SPREADSHEET SAAT BUKA APLIKASI
+    window.addEventListener('DOMContentLoaded', () => {
+      setupPWAInstallability();
 
-      setTimeout(() => {
-        const splash = document.getElementById('splashScreen');
-        if (splash) {
-          splash.classList.add('fade-out');
-          setTimeout(() => {
-            splash.remove();
-            // Cek apakah ada sesi tersimpan (khususnya agar Kurir tetap ON terus meski halaman tidak sengaja ter-reload)
-            const savedSession = localStorage.getItem('HANAM_HANUM_ACTIVE_USER');
-            if (savedSession) {
-              try {
-                const parsedUser = JSON.parse(savedSession);
-                const validUser = DB.HH_USERS.find(u => String(u.user_id) === String(parsedUser.user_id) || u.email.toLowerCase() === parsedUser.email.toLowerCase());
-                if (validUser) {
-                  currentUser = validUser;
-                  document.getElementById('loginScreen').classList.add('hidden');
-                  document.getElementById('appShell').classList.remove('hidden');
-                  updateUserHeaderUI();
-                  renderSidebarMenu();
-                  startGlobalAutoRefreshSync();
-                  if (currentUser.role === 'kurir') {
-                    activateCourierStayOnProtection();
-                    navigateTo('kurir_home');
-                  } else if (currentUser.role === 'gudang') {
-                    navigateTo('persiapan');
-                  } else {
-                    navigateTo('dashboard');
+      const startTime = Date.now();
+      syncWithGASBackend(false).finally(() => {
+        enforceSingleDeveloperUI();
+        const elapsed = Date.now() - startTime;
+        const remainingTime = Math.max(0, 2000 - elapsed);
+
+        setTimeout(() => {
+          const splash = document.getElementById('splashScreen');
+          if (splash) {
+            splash.classList.add('fade-out');
+            setTimeout(() => {
+              splash.remove();
+              const savedSession = localStorage.getItem('HANAM_HANUM_ACTIVE_USER');
+              if (savedSession) {
+                try {
+                  const parsedUser = JSON.parse(savedSession);
+                  const validUser = DB.HH_USERS.find(u =>
+                    (String(u.user_id) === String(parsedUser.user_id) || u.email.toLowerCase() === parsedUser.email.toLowerCase()) &&
+                    isUserApproved(u)
+                  );
+                  if (validUser) {
+                    currentUser = validUser;
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('appShell').classList.remove('hidden');
+                    updateUserHeaderUI();
+                    renderSidebarMenu();
+                    startGlobalAutoRefreshSync();
+                    if (currentUser.role === 'kurir') {
+                      activateCourierStayOnProtection();
+                      navigateTo('kurir_home');
+                    } else if (currentUser.role === 'gudang') {
+                      navigateTo('persiapan');
+                    } else {
+                      navigateTo('dashboard');
+                    }
+                    return;
                   }
-                  return;
-                }
-              } catch (e) {}
-            }
-            document.getElementById('loginScreen').classList.remove('hidden');
-          }, 400);
-        }
-      }, 1000);
+                } catch (e) {}
+              }
+              document.getElementById('loginScreen').classList.remove('hidden');
+            }, 400);
+          }
+        }, remainingTime);
+      });
 
       const params = new URLSearchParams(window.location.search);
       const trackOrderId = params.get('track');
@@ -517,6 +684,46 @@
         openPublicTrackingModal(trackOrderId);
       }
     });
+
+    // Helper Cek Apakah User Sudah Disetujui Pengembang
+    function isUserApproved(userObj) {
+      if (!userObj) return false;
+      const val = userObj.active;
+      if (val === false || String(val).toLowerCase() === 'false' || String(val).toUpperCase() === 'PENDING') {
+        return false;
+      }
+      return true;
+    }
+
+    // Helper Cek Apakah Sudah Ada Pengembang (Maksimal 1 Orang)
+    function hasRegisteredDeveloper(excludeUserId = '') {
+      return (DB.HH_USERS || []).some(u =>
+        String(u.role || '').toLowerCase() === 'pengembang' &&
+        String(u.user_id) !== String(excludeUserId)
+      );
+    }
+
+    function enforceSingleDeveloperUI() {
+      const optDev = document.getElementById('optRegDeveloper');
+      if (!optDev) return;
+      if (hasRegisteredDeveloper()) {
+        optDev.disabled = true;
+        optDev.innerText = 'Pengembang / Developer (Sudah Terdaftar - Terkunci)';
+      } else {
+        optDev.disabled = false;
+        optDev.innerText = 'Pengembang / Developer (Maksimal 1 Orang)';
+      }
+    }
+
+    function handleRegRoleNotice(selectedRole) {
+      const box = document.getElementById('regRoleWarningBox');
+      if (!box) return;
+      if (['admin', 'gudang', 'manager'].includes(selectedRole)) {
+        box.classList.remove('hidden');
+      } else {
+        box.classList.add('hidden');
+      }
+    }
 
     // FUNGSI LIHAT / SEMBUNYIKAN PASSWORD
     function togglePasswordVisibility(inputId, iconId) {
@@ -612,7 +819,7 @@
     const LOGO_URL = 'https://res.cloudinary.com/div5frz9v/image/upload/v1784133658/Logo_H_H_stroke_jgm7d6.png';
 
     /*************************************************************************
-     * 2. DATABASE 14 SHEET (DEFAULT BERSIH AGAR SAMA PERSIS DENGAN SPREADSHEET)
+     * 2. DATABASE 14 SHEET
      *************************************************************************/
     const DEFAULT_DB = {
       HH_USERS: [
@@ -637,7 +844,7 @@
       HH_ACTIVITY_LOG: [],
       HH_SETTINGS: {
         company_name: 'Hanam Hanum Delivery',
-        gas_webapp_url: 'https://script.google.com/macros/s/AKfycbzMzKIHylAa6oAY2uPoD0uw5OH_ze9VW5UKHVLmdkHMqiU53LRjYeVNaalyzZmVHSlArA/exec',
+        gas_webapp_url: 'https://script.google.com/macros/s/AKfycbyS4RkjQmum_7kHSb9cI7IExYq9sUnF3SJPCArHJvI-wchMuIsN60_cEBafT57M5hhZzg/exec',
         spreadsheet_id: '1xZF01_8HbPIcjomang4XHhmKVFx_EXSRLEo12Zpw49E',
         drive_folder_id: '13gCbISldFvaTHSQdJ0e023Ry2DQ9U0jJ',
         telegram_bot_username: '@HanamHanumOrderBot',
@@ -656,7 +863,6 @@
 
     function loadDatabaseFromStorage() {
       try {
-        // Gunakan key V3 agar cache data dummy lama (V2) langsung bersih
         const saved = localStorage.getItem('HANAM_HANUM_DB_V3');
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -748,7 +954,7 @@
       setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
-      }, 3500);
+      }, 3800);
     }
 
     function openModal(title, htmlContent) {
@@ -891,9 +1097,10 @@
     }
 
     /*************************************************************************
-     * 4. SISTEM LOGIN & AUTO-SYNC REALTIME SEMUA ROLE (ADMIN, GUDANG, KURIR, MANAGER)
+     * 4. SISTEM LOGIN, PEMBATASAN PENDAFTARAN ROLE & PENGEMBANG MAKSIMAL 1 ORANG
      *************************************************************************/
     function switchAuthTab(tab) {
+      enforceSingleDeveloperUI();
       const loginPanel = document.getElementById('loginTabPanel');
       const regPanel = document.getElementById('registerTabPanel');
       if (tab === 'login') {
@@ -902,6 +1109,8 @@
       } else {
         loginPanel.classList.add('hidden');
         regPanel.classList.remove('hidden');
+        const regRoleEl = document.getElementById('regRole');
+        if (regRoleEl) handleRegRoleNotice(regRoleEl.value);
       }
     }
 
@@ -918,8 +1127,19 @@
         return;
       }
 
+      // 3. CEGAH PENDAFTARAN PENGEMBANG JIKA SUDAH ADA 1 PENGEMBANG TERDAFTAR
+      if (role === 'pengembang' && hasRegisteredDeveloper()) {
+        showToast('Pendaftaran Pengembang ditolak! Pengembang hanya dibatasi 1 orang saja dan sudah terdaftar.', 'error');
+        enforceSingleDeveloperUI();
+        return;
+      }
+
+      // 2. PEMBATASAN PENDAFTARAN MANAGER, ADMIN, DAN GUDANG HARUS IZIN / KONFIRMASI PENGEMBANG
+      const requiresDeveloperApproval = ['manager', 'admin', 'gudang'].includes(role);
+      const isApprovedStatus = !requiresDeveloperApproval;
+
       const passHash = await sha256Hash(password);
-      const defaultBranchId = (DB.HH_BRANCHES && DB.HH_BRANCHES.length > 0) ? DB.HH_BRANCHES[0].branch_id : '';
+      const defaultBranchId = (DB.HH_BRANCHES && DB.HH_BRANCHES.length > 0) ? DB.HH_BRANCHES[0].branch_id : 'BR-01';
       const newUser = {
         user_id: generateUID('USR'),
         name,
@@ -929,13 +1149,38 @@
         branch_id: defaultBranchId,
         vehicle: role === 'kurir' ? 'Armada Kurir HH' : '-',
         password_hash: passHash,
-        active: true
+        active: isApprovedStatus
       };
 
       DB.HH_USERS.push(newUser);
       commitDatabaseChange('registerUser', { user: newUser });
 
-      showToast(`Pendaftaran berhasil! Akun ${name} (${role.toUpperCase()}) telah aktif.`, 'success');
+      if (requiresDeveloperApproval) {
+        openModal('Menunggu Izin & Konfirmasi Pengembang', `
+          <div class="space-y-4 text-xs text-slate-700 text-center py-2">
+            <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mx-auto">
+              <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <div class="space-y-1.5">
+              <h4 class="font-extrabold text-base text-slate-900">Pendaftaran ${role.toUpperCase()} Terkirim!</h4>
+              <p class="text-slate-600 max-w-md mx-auto leading-relaxed">
+                Sesuai kebijakan keamanan sistem, pendaftaran untuk posisi <b>Manager, Admin, dan Gudang</b> dibatasi dan wajib mendapatkan izin / konfirmasi dari <b>Pengembang (Developer)</b> terlebih dahulu.
+              </p>
+              <p class="text-[11px] font-bold text-[#053f28] bg-hh-50 py-2 px-3 rounded-xl border border-hh-200 inline-block mt-2">
+                Silakan hubungi Pengembang untuk menyetujui akun: ${email}
+              </p>
+            </div>
+            <div class="pt-2">
+              <button type="button" onclick="closeModal()" class="px-6 py-2.5 rounded-xl bg-[#053f28] text-[#fde002] font-extrabold">
+                Mengerti
+              </button>
+            </div>
+          </div>
+        `);
+      } else {
+        showToast(`Pendaftaran berhasil! Akun ${name} (${role.toUpperCase()}) telah aktif.`, 'success');
+      }
+
       document.getElementById('loginEmail').value = email;
       document.getElementById('loginPassword').value = password;
       switchAuthTab('login');
@@ -1084,7 +1329,6 @@
         }
       });
 
-      // Reset set sesuai isi terbaru dari database (agar jika dihapus di Spreadsheet, ikut terhapus dari memori)
       knownCourierOrderIds = new Set(newOrdersArray.map(o => String(o.order_id)));
       knownOrderAssignments = {};
       newOrdersArray.forEach(o => {
@@ -1100,7 +1344,6 @@
       }
     }
 
-    // SINKRONISASI REAL-TIME OTOMATIS UNTUK SEMUA ROLE (ADMIN, GUDANG, KURIR, MANAGER)
     function startGlobalAutoRefreshSync() {
       if (globalAutoSyncTimer) clearInterval(globalAutoSyncTimer);
       knownCourierOrderIds = new Set((DB.HH_ORDERS || []).map(o => String(o.order_id)));
@@ -1122,7 +1365,9 @@
             updateTelegramBadge();
             if (JSON.stringify(DB) !== oldSnapshot) {
               const activeTag = document.activeElement ? document.activeElement.tagName : '';
-              if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag)) {
+              const modalOverlay = document.getElementById('modalOverlay');
+              const isModalOpen = modalOverlay && !modalOverlay.classList.contains('hidden');
+              if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag) && !isModalOpen) {
                 navigateTo(currentView);
               }
             }
@@ -1142,16 +1387,32 @@
       const password = document.getElementById('loginPassword').value;
       const passHash = await sha256Hash(password);
 
-      // Pastikan data user disinkronkan dari Spreadsheet terlebih dahulu
       await syncWithGASBackend(false);
 
-      const user = DB.HH_USERS.find(u => u.email.toLowerCase() === email && u.active !== false);
-      if (!user || (user.password_hash !== passHash && password !== '123456')) {
+      const matchedAccount = DB.HH_USERS.find(u => u.email.toLowerCase() === email);
+      if (!matchedAccount || (matchedAccount.password_hash !== passHash && password !== '123456')) {
         showToast('Email atau password tidak sesuai!', 'error');
         return;
       }
 
-      currentUser = user;
+      // 2. CEK APAKAH AKUN MANAGER / ADMIN / GUDANG SUDAH DIIZINKAN PENGEMBANG
+      if (!isUserApproved(matchedAccount)) {
+        openModal('Menunggu Konfirmasi Pengembang', `
+          <div class="space-y-4 text-xs text-slate-700 text-center py-2">
+            <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mx-auto">
+              <i class="fa-solid fa-user-clock"></i>
+            </div>
+            <h4 class="font-extrabold text-sm text-slate-900">Akun Belum Dikonfirmasi Pengembang</h4>
+            <p class="text-slate-600 max-w-sm mx-auto leading-relaxed">
+              Pendaftaran Anda sebagai <b>${matchedAccount.role.toUpperCase()}</b> masih menunggu izin / persetujuan dari <b>Pengembang (Developer)</b>.
+            </p>
+            <button type="button" onclick="closeModal()" class="px-5 py-2 rounded-xl bg-[#053f28] text-[#fde002] font-extrabold">Tutup</button>
+          </div>
+        `);
+        return;
+      }
+
+      currentUser = matchedAccount;
       try {
         localStorage.setItem('HANAM_HANUM_ACTIVE_USER', JSON.stringify(currentUser));
       } catch (err) {}
@@ -1163,17 +1424,17 @@
       renderSidebarMenu();
       startGlobalAutoRefreshSync();
 
-      if (user.role === 'kurir') {
+      if (currentUser.role === 'kurir') {
         activateCourierStayOnProtection();
         navigateTo('kurir_home');
-      } else if (user.role === 'gudang') {
+      } else if (currentUser.role === 'gudang') {
         navigateTo('persiapan');
       } else {
         navigateTo('dashboard');
       }
 
-      logActivity(`Login ke aplikasi sebagai ${user.role.toUpperCase()}`);
-      showToast(`Selamat datang, ${user.name}!`, 'success');
+      logActivity(`Login ke aplikasi sebagai ${currentUser.role.toUpperCase()}`);
+      showToast(`Selamat datang, ${currentUser.name}!`, 'success');
     }
 
     function updateUserHeaderUI() {
@@ -1230,7 +1491,6 @@
       if (el) el.innerText = pendingCount;
     }
 
-    // KONFIRMASI NOTIFIKASI KELUAR AKUN ("Apakah kamu ingin keluar?")
     function requestLogoutConfirmation() {
       openModal('Konfirmasi Keluar Aplikasi', `
         <div class="space-y-5 text-center py-2">
@@ -1272,7 +1532,6 @@
         localStorage.removeItem('HANAM_HANUM_ACTIVE_USER');
       } catch (e) {}
 
-      // Kosongkan input email & password agar kembali bersih dengan placeholder tipis
       const emailInput = document.getElementById('loginEmail');
       const passInput = document.getElementById('loginPassword');
       if (emailInput) emailInput.value = '';
@@ -1280,6 +1539,7 @@
 
       document.getElementById('appShell').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
+      enforceSingleDeveloperUI();
       showToast('Anda telah keluar dari sesi.', 'info');
     }
 
@@ -1292,17 +1552,23 @@
       const nav = document.getElementById('sidebarNav');
       if (!nav || !currentUser) return;
       const allowed = MENU_CONFIG.filter(m => m.roles.includes(currentUser.role));
+      const pendingUsersCount = DB.HH_USERS.filter(u => !isUserApproved(u)).length;
+
       nav.innerHTML = allowed.map(m => {
         const isActive = m.id === currentView;
+        const showPendingBadge = m.id === 'pengguna' && currentUser.role === 'pengembang' && pendingUsersCount > 0;
         return `
           <button onclick="navigateTo('${m.id}')"
-            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
+            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition ${
               isActive
                 ? 'bg-[#053f28] text-[#fde002] shadow-sm'
                 : 'text-slate-600 hover:bg-hh-50 hover:text-[#053f28]'
             }">
-            <i class="fa-solid ${m.icon} w-5 text-center text-sm"></i>
-            <span class="truncate">${m.label}</span>
+            <div class="flex items-center gap-3 truncate">
+              <i class="fa-solid ${m.icon} w-5 text-center text-sm"></i>
+              <span class="truncate">${m.label}</span>
+            </div>
+            ${showPendingBadge ? `<span class="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black">${pendingUsersCount} Izin</span>` : ''}
           </button>
         `;
       }).join('');
@@ -1325,7 +1591,6 @@
       const container = document.getElementById('viewContainer');
       if (!container || !currentUser) return;
 
-      // KHUSUS ROLE KURIR (5 MENU BOTTOM NAV)
       if (currentUser.role === 'kurir') {
         const courierTabs = ['kurir_home', 'kurir_pesanan', 'kurir_pengiriman', 'kurir_riwayat', 'kurir_profile'];
         const targetTab = courierTabs.includes(viewId) ? viewId : 'kurir_home';
@@ -1376,7 +1641,7 @@
     }
 
     /*************************************************************************
-     * TAHAP 2: 5 VIEW KHUSUS APLIKASI HANDPHONE KURIR
+     * 5 VIEW KHUSUS APLIKASI HANDPHONE KURIR
      *************************************************************************/
     function renderKurirMobileHome(container) {
       const totalOrders = DB.HH_ORDERS.length;
@@ -1499,7 +1764,6 @@
                   ${statusBadgeHTML(o.status)}
                 </div>
 
-                <!-- Banner Status Penugasan Kurir -->
                 ${isAssigned ? `
                   <div class="p-3 rounded-xl border ${isAssignedToMe ? 'bg-emerald-50 border-emerald-300 text-[#053f28]' : 'bg-amber-50 border-amber-200 text-amber-900'} flex items-center justify-between gap-2 text-xs">
                     <div class="flex items-center gap-2">
@@ -1582,7 +1846,6 @@
     }
 
     function renderKurirMobilePengiriman(container) {
-      // HANYA TAMPILKAN ORDER YANG DITUGASKAN KE KURIR YANG SEDANG LOGIN INI SAJA
       const activeOrders = DB.HH_ORDERS.filter(o =>
         !['Berhasil terkirim', 'Gagal terkirim'].includes(o.status) &&
         String(o.courier_id) === String(currentUser.user_id)
@@ -1776,6 +2039,10 @@
             </div>
           </div>
 
+          <button onclick="triggerInstallApp()" class="w-full py-3 rounded-2xl bg-[#053f28] text-[#fde002] font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-download"></i> Instal Aplikasi di HP
+          </button>
+
           <button onclick="requestLogoutConfirmation()" class="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition">
             <i class="fa-solid fa-power-off"></i> Keluar Akun Kurir
           </button>
@@ -1784,7 +2051,7 @@
     }
 
     /*************************************************************************
-     * 5. MENU DASHBOARD ADMIN / GUDANG / MANAGER
+     * 5. MENU DASHBOARD ADMIN / GUDANG / MANAGER / PENGEMBANG
      *************************************************************************/
     function renderDashboard(container) {
       const totalOrders = DB.HH_ORDERS.length;
@@ -1792,6 +2059,7 @@
       const completed = DB.HH_ORDERS.filter(o => o.status === 'Berhasil terkirim').length;
       const pendingPrep = DB.HH_ORDERS.filter(o => ['Pesanan diterima', 'Menunggu persiapan', 'Sedang disiapkan', 'Siap dikirim'].includes(o.status)).length;
       const totalRevenue = DB.HH_ORDERS.reduce((acc, o) => acc + Number(o.total_amount || 0), 0);
+      const pendingApprovals = DB.HH_USERS.filter(u => !isUserApproved(u));
 
       container.innerHTML = `
         <div class="bg-gradient-to-r from-[#053f28] to-[#043320] rounded-2xl p-6 text-white shadow-lg border-l-8 border-[#fde002] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -1814,6 +2082,23 @@
             ` : ''}
           </div>
         </div>
+
+        ${currentUser.role === 'pengembang' && pendingApprovals.length > 0 ? `
+          <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg shrink-0">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
+              <div>
+                <h4 class="font-extrabold text-xs sm:text-sm text-amber-900">Ada ${pendingApprovals.length} Pendaftaran (Manager / Admin / Gudang) Menunggu Izin Anda!</h4>
+                <p class="text-[11px] text-amber-800">Klik tombol Konfirmasi Izin untuk menyetujui atau menolak pendaftaran tersebut.</p>
+              </div>
+            </div>
+            <button onclick="navigateTo('pengguna')" class="px-4 py-2 rounded-xl bg-[#053f28] text-[#fde002] font-extrabold text-xs">
+              Buka Konfirmasi Izin →
+            </button>
+          </div>
+        ` : ''}
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
@@ -2430,133 +2715,224 @@
     }
 
     /*************************************************************************
-     * 7. PROSES WA VIA TELEGRAM BOT PARSER
+     * 7. PROSES WA VIA TELEGRAM BOT PARSER (FIXED KONFIRMASI MASUK PESANAN)
      *************************************************************************/
     function openTelegramSimulatorModal() {
       const pendingDrafts = (DB.HH_TELEGRAM || []).filter(d => d.status === 'Draft Menunggu Konfirmasi');
       openModal('Integrasi Telegram Bot — Proses Pesanan WhatsApp Otomatis', `
         <div class="space-y-5 text-xs">
           <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-            <label class="block font-extrabold text-slate-800">Tempel / Teruskan Pesan Order WhatsApp:</label>
+            <label class="block font-extrabold text-slate-800">Tempel / Copy-Paste Pesan Order dari WhatsApp / Telegram:</label>
             <textarea id="rawWaMessageInput" rows="5" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-mono text-[11px]"
               placeholder="Contoh:\nNama: Ibu Ratna\nHP: 081377889900\nAlamat: Jl. Kemang Raya No. 18\nTanggal Kirim: 2026-11-05\nPesanan:\n- Apel Fuji 4 Kg"></textarea>
-            <button onclick="parseWhatsAppMessageToDraft()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold">
-              <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Proses Pesan WA Jadi Draft Order
-            </button>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="parseWhatsAppMessageToDraft(false)" class="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold transition">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Proses Pesan WA Jadi Draft
+              </button>
+              <button type="button" onclick="parseWhatsAppMessageToDraft(true)" class="px-4 py-2.5 rounded-xl bg-[#053f28] hover:bg-[#04301e] text-[#fde002] font-extrabold shadow-sm transition">
+                <i class="fa-solid fa-bolt mr-1"></i> Proses & Langsung Konfirmasi Masuk Pesanan
+              </button>
+            </div>
           </div>
 
           <div class="space-y-3">
-            <h4 class="font-extrabold text-slate-800">Daftar Draft Telegram (${pendingDrafts.length} Menunggu Konfirmasi)</h4>
-            ${pendingDrafts.map(d => `
-              <div class="p-4 rounded-xl border-2 border-sky-200 bg-white space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="font-extrabold text-sky-700">${d.draft_id} • Masuk: ${d.received_at}</span>
-                  <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">${d.status}</span>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-400">Nama Pelanggan</label>
-                    <input id="drf_name_${d.draft_id}" value="${d.parsed_customer}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold" />
+            <h4 class="font-extrabold text-slate-800">Daftar Draft WA / Telegram (${pendingDrafts.length} Menunggu Konfirmasi)</h4>
+            ${pendingDrafts.map((d, idx) => {
+              const safeId = String(d.draft_id || ('DRF-' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
+              const itemsArr = Array.isArray(d.parsed_items) ? d.parsed_items : [];
+              return `
+                <div class="p-4 rounded-xl border-2 border-sky-200 bg-white space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="font-extrabold text-sky-700">${d.draft_id} • Masuk: ${d.received_at || 'Baru saja'}</span>
+                    <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">${d.status}</span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-400">Nama Pelanggan</label>
+                      <input id="drf_name_${safeId}" value="${String(d.parsed_customer || 'Pelanggan WA').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold" />
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-400">Nomor Telepon</label>
+                      <input id="drf_phone_${safeId}" value="${String(d.parsed_phone || '-').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-400">Tanggal Kirim</label>
+                      <input id="drf_date_${safeId}" type="date" value="${String(d.parsed_date || new Date().toISOString().slice(0, 10)).slice(0, 10)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
+                    </div>
                   </div>
                   <div>
-                    <label class="text-[10px] font-bold text-slate-400">Nomor Telepon</label>
-                    <input id="drf_phone_${d.draft_id}" value="${d.parsed_phone}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
+                    <label class="text-[10px] font-bold text-slate-400">Alamat Pengiriman</label>
+                    <input id="drf_addr_${safeId}" value="${String(d.parsed_address || 'Jakarta').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
                   </div>
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-400">Tanggal Kirim</label>
-                    <input id="drf_date_${d.draft_id}" type="date" value="${String(d.parsed_date || '').slice(0, 10)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
+                  <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px]">
+                    <span class="font-bold text-[#053f28]">Item Terbaca:</span>
+                    ${itemsArr.length > 0
+                      ? itemsArr.map(it => `${it.product_name} (${it.qty} ${it.unit})`).join(', ')
+                      : `<span class="text-slate-500">${(d.raw_message || '').replace(/\n/g, ' • ')}</span>`}
+                  </div>
+                  <div class="flex justify-end gap-2 pt-1">
+                    <button type="button" onclick="rejectTelegramDraft('${d.draft_id}')" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold cursor-pointer">
+                      Hapus Draft
+                    </button>
+                    <button type="button" onclick="confirmTelegramDraft('${d.draft_id}', '${safeId}')" class="px-4 py-2 rounded-xl bg-[#053f28] hover:bg-[#04301e] text-[#fde002] font-extrabold shadow-sm cursor-pointer">
+                      <i class="fa-solid fa-check mr-1"></i> Konfirmasi Masuk Pesanan
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <label class="text-[10px] font-bold text-slate-400">Alamat Pengiriman</label>
-                  <input id="drf_addr_${d.draft_id}" value="${d.parsed_address}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
-                </div>
-                <div class="flex justify-end gap-2">
-                  <button onclick="rejectTelegramDraft('${d.draft_id}')" class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 font-bold">Hapus Draft</button>
-                  <button onclick="confirmTelegramDraft('${d.draft_id}')" class="px-4 py-1.5 rounded-lg bg-[#053f28] text-[#fde002] font-extrabold">
-                    <i class="fa-solid fa-check mr-1"></i> Konfirmasi Masuk Pesanan
-                  </button>
-                </div>
-              </div>
-            `).join('') || `<p class="text-slate-400 italic py-4 text-center">Belum ada draft Telegram yang menunggu konfirmasi.</p>`}
+              `;
+            }).join('') || `<p class="text-slate-400 italic py-4 text-center">Belum ada draft WA / Telegram yang menunggu konfirmasi.</p>`}
           </div>
         </div>
       `);
     }
 
-    function parseWhatsAppMessageToDraft() {
-      const raw = document.getElementById('rawWaMessageInput').value.trim();
+    function parseWhatsAppMessageToDraft(autoConfirmNow = false) {
+      const rawEl = document.getElementById('rawWaMessageInput');
+      const raw = rawEl ? rawEl.value.trim() : '';
       if (!raw) {
-        showToast('Tempel pesan WhatsApp terlebih dahulu!', 'warning');
+        showToast('Tempel pesan WhatsApp / Telegram terlebih dahulu!', 'warning');
         return;
       }
 
-      const nameMatch = raw.match(/(?:nama|pelanggan|pemesan)\s*[:\-]\s*(.+)/i);
+      const nameMatch = raw.match(/(?:nama|pelanggan|pemesan|customer)\s*[:\-]\s*(.+)/i);
       const phoneMatch = raw.match(/(?:hp|wa|telp|telepon|no)\s*[:\-]?\s*([0-9\+]{9,15})/i) || raw.match(/(08[0-9]{8,12})/);
-      const addrMatch = raw.match(/(?:alamat|lokasi|kirim ke)\s*[:\-]\s*(.+)/i);
+      const addrMatch = raw.match(/(?:alamat|lokasi|kirim ke|tujuan)\s*[:\-]\s*(.+)/i);
       const dateMatch = raw.match(/(?:tanggal|tgl)\s*(?:kirim)?\s*[:\-]\s*(\d{4}-\d{2}-\d{2})/i);
 
       const parsedItems = [];
       const lines = raw.split('\n');
+
       lines.forEach(line => {
-        DB.HH_PRODUCTS.forEach(prod => {
-          const firstWord = prod.name.split(' ')[0].toLowerCase();
-          const lowerLine = line.toLowerCase();
-          if (lowerLine.includes(firstWord)) {
-            const qtyMatch = line.match(/(\d+(?:[\.,]\d+)?)\s*(kg|sisir|pack|ikat|box|buah)?/i);
-            if (qtyMatch && !parsedItems.some(x => x.product_id === prod.product_id)) {
+        const cleanLine = line.trim();
+        if (!cleanLine) return;
+
+        // 1. Cocokkan dengan katalog produk jika ada
+        if (Array.isArray(DB.HH_PRODUCTS) && DB.HH_PRODUCTS.length > 0) {
+          DB.HH_PRODUCTS.forEach(prod => {
+            const firstWord = String(prod.name || '').split(' ')[0].toLowerCase();
+            if (firstWord && cleanLine.toLowerCase().includes(firstWord)) {
+              const qtyMatch = cleanLine.match(/(\d+(?:[\.,]\d+)?)\s*(kg|sisir|pack|ikat|box|buah|pcs|gram|gr)?/i);
+              if (qtyMatch && !parsedItems.some(x => x.product_id === prod.product_id)) {
+                parsedItems.push({
+                  product_id: prod.product_id,
+                  product_name: prod.name,
+                  qty: parseFloat(qtyMatch[1].replace(',', '.')) || 1,
+                  unit: prod.unit || 'Kg',
+                  price: Number(prod.price) || 25000
+                });
+              }
+            }
+          });
+        }
+
+        // 2. Jika baris diawali tanda "-" atau "•" (format list WA) namun belum masuk katalog produk
+        if (/^[\-\•\*]\s*/.test(cleanLine)) {
+          const itemText = cleanLine.replace(/^[\-\•\*]\s*/, '').trim();
+          const qtyMatch = itemText.match(/(.+?)\s+(\d+(?:[\.,]\d+)?)\s*(kg|sisir|pack|ikat|box|buah|pcs|karton)?/i);
+          if (qtyMatch) {
+            const pName = qtyMatch[1].replace(/[:\-]$/, '').trim();
+            const pQty = parseFloat(qtyMatch[2].replace(',', '.')) || 1;
+            const pUnit = qtyMatch[3] || 'Kg';
+            if (!parsedItems.some(x => x.product_name.toLowerCase() === pName.toLowerCase())) {
               parsedItems.push({
-                product_id: prod.product_id,
-                product_name: prod.name,
-                qty: parseFloat(qtyMatch[1].replace(',', '.')),
-                unit: prod.unit,
-                price: prod.price
+                product_id: generateUID('PRD-WA'),
+                product_name: pName,
+                qty: pQty,
+                unit: pUnit,
+                price: 25000
               });
             }
+          } else if (itemText.length > 2 && !parsedItems.some(x => x.product_name.toLowerCase() === itemText.toLowerCase())) {
+            parsedItems.push({
+              product_id: generateUID('PRD-WA'),
+              product_name: itemText,
+              qty: 1,
+              unit: 'Pack',
+              price: 25000
+            });
           }
-        });
+        }
       });
 
-      if (parsedItems.length === 0 && DB.HH_PRODUCTS.length > 0) {
-        parsedItems.push({
-          product_id: DB.HH_PRODUCTS[0].product_id,
-          product_name: DB.HH_PRODUCTS[0].name,
-          qty: 2,
-          unit: DB.HH_PRODUCTS[0].unit,
-          price: DB.HH_PRODUCTS[0].price
-        });
+      if (parsedItems.length === 0) {
+        if (Array.isArray(DB.HH_PRODUCTS) && DB.HH_PRODUCTS.length > 0) {
+          parsedItems.push({
+            product_id: DB.HH_PRODUCTS[0].product_id,
+            product_name: DB.HH_PRODUCTS[0].name,
+            qty: 2,
+            unit: DB.HH_PRODUCTS[0].unit || 'Kg',
+            price: Number(DB.HH_PRODUCTS[0].price) || 25000
+          });
+        } else {
+          parsedItems.push({
+            product_id: generateUID('PRD-WA'),
+            product_name: 'Paket Buah & Sayur Segar (Order WA)',
+            qty: 1,
+            unit: 'Paket',
+            price: 50000
+          });
+        }
       }
 
-      DB.HH_TELEGRAM.unshift({
-        draft_id: generateUID('TG-DRF'),
+      const newDraftId = generateUID('TG');
+      const newDraftObj = {
+        draft_id: newDraftId,
         received_at: nowFormatted(),
         raw_message: raw,
         parsed_customer: nameMatch ? nameMatch[1].trim() : 'Pelanggan WhatsApp',
         parsed_phone: phoneMatch ? phoneMatch[1].trim() : '08120000000',
-        parsed_address: addrMatch ? addrMatch[1].trim() : 'Jakarta',
+        parsed_address: addrMatch ? addrMatch[1].trim() : 'Alamat Sesuai Chat WA',
         parsed_date: dateMatch ? dateMatch[1].trim() : new Date().toISOString().slice(0, 10),
         parsed_items: parsedItems,
+        parsed_items_json: JSON.stringify(parsedItems),
         status: 'Draft Menunggu Konfirmasi'
-      });
+      };
 
-      commitDatabaseChange();
+      if (!Array.isArray(DB.HH_TELEGRAM)) DB.HH_TELEGRAM = [];
+      DB.HH_TELEGRAM.unshift(newDraftObj);
+
+      commitDatabaseChange('upsertTelegramDraft', { draft: newDraftObj });
       updateTelegramBadge();
-      showToast('Pesan WA berhasil dibaca menjadi Draft Pesanan!', 'info');
-      openTelegramSimulatorModal();
+
+      if (autoConfirmNow) {
+        const safeId = String(newDraftId).replace(/[^a-zA-Z0-9_-]/g, '');
+        confirmTelegramDraft(newDraftId, safeId);
+      } else {
+        showToast('Pesan WA/Telegram berhasil dijadikan Draft! Klik "Konfirmasi Masuk Pesanan".', 'info');
+        openTelegramSimulatorModal();
+      }
     }
 
-    function confirmTelegramDraft(draftId) {
-      const d = DB.HH_TELEGRAM.find(x => x.draft_id === draftId);
-      if (!d) return;
+    function confirmTelegramDraft(draftId, safeId = '') {
+      if (!Array.isArray(DB.HH_TELEGRAM)) DB.HH_TELEGRAM = [];
+      const d = DB.HH_TELEGRAM.find(x => String(x.draft_id) === String(draftId));
+      if (!d) {
+        showToast('Draft tidak ditemukan atau sudah dikonfirmasi.', 'warning');
+        return;
+      }
 
-      const custName = document.getElementById(`drf_name_${draftId}`)?.value || d.parsed_customer;
-      const custPhone = document.getElementById(`drf_phone_${draftId}`)?.value || d.parsed_phone;
-      const custAddr = document.getElementById(`drf_addr_${draftId}`)?.value || d.parsed_address;
-      const delivDate = document.getElementById(`drf_date_${draftId}`)?.value || d.parsed_date;
+      const domKey = safeId || String(draftId).replace(/[^a-zA-Z0-9_-]/g, '');
+      const custName = (document.getElementById(`drf_name_${domKey}`)?.value || d.parsed_customer || 'Pelanggan WA').trim();
+      const custPhone = (document.getElementById(`drf_phone_${domKey}`)?.value || d.parsed_phone || '-').trim();
+      const custAddr = (document.getElementById(`drf_addr_${domKey}`)?.value || d.parsed_address || 'Jakarta').trim();
+      const delivDate = document.getElementById(`drf_date_${domKey}`)?.value || String(d.parsed_date || new Date().toISOString().slice(0, 10)).slice(0, 10);
 
       const newOrderId = `ORD-${Math.floor(261105 + Math.random() * 8900)}`;
-      const itemsList = Array.isArray(d.parsed_items) ? d.parsed_items : [];
-      const total = itemsList.reduce((acc, it) => acc + (Number(it.qty || 1) * Number(it.price || 0)), 0);
+      let itemsList = Array.isArray(d.parsed_items) ? d.parsed_items : [];
+      if (itemsList.length === 0 && d.parsed_items_json) {
+        try { itemsList = JSON.parse(d.parsed_items_json); } catch (e) { itemsList = []; }
+      }
+      if (itemsList.length === 0) {
+        itemsList = [{
+          product_id: generateUID('PRD-WA'),
+          product_name: 'Pesanan WA/Telegram (' + (d.raw_message ? d.raw_message.slice(0, 35) : 'Item Segar') + ')',
+          qty: 1,
+          unit: 'Paket',
+          price: 50000
+        }];
+      }
+
+      const total = itemsList.reduce((acc, it) => acc + (Number(it.qty || 1) * Number(it.price || 25000)), 0);
       const defaultBranchId = (DB.HH_BRANCHES && DB.HH_BRANCHES.length > 0) ? DB.HH_BRANCHES[0].branch_id : 'BR-01';
 
       const newOrderObj = {
@@ -2568,12 +2944,12 @@
         customer_phone: custPhone,
         customer_address: custAddr,
         branch_id: defaultBranchId,
-        source: 'Telegram WA Forward',
+        source: 'WA / Telegram',
         status: 'Menunggu persiapan',
         courier_id: '',
         courier_name: '-',
         total_amount: total,
-        notes: 'Dikonfirmasi dari Telegram Draft ' + draftId,
+        notes: 'Dikonfirmasi dari WA/Telegram (' + draftId + ')',
         public_tracking_enabled: true,
         lat: -6.2450 + (Math.random() - 0.5) * 0.03,
         lng: 106.8600 + (Math.random() - 0.5) * 0.03
@@ -2583,16 +2959,18 @@
 
       const newItems = [];
       itemsList.forEach(it => {
+        const qtyVal = Number(it.qty || it.qty_ordered || 1);
+        const priceVal = Number(it.price || 25000);
         const itemObj = {
           item_id: generateUID('ITM'),
           order_id: newOrderId,
-          product_id: it.product_id,
-          product_name: it.product_name,
-          qty_ordered: it.qty,
-          qty_actual: it.qty,
+          product_id: it.product_id || generateUID('PRD'),
+          product_name: it.product_name || 'Produk Buah & Sayur',
+          qty_ordered: qtyVal,
+          qty_actual: qtyVal,
           qty_damaged: 0,
-          unit: it.unit,
-          price: it.price,
+          unit: it.unit || 'Kg',
+          price: priceVal,
           qc_status: 'Pending'
         };
         DB.HH_ORDER_ITEMS.push(itemObj);
@@ -2604,21 +2982,27 @@
         order_id: newOrderId,
         status: 'Pesanan diterima',
         timestamp: nowFormatted(),
-        actor: `${currentUser.name} (Telegram Bot)`,
-        note: 'Draft Telegram dikonfirmasi & masuk antrean gudang.'
+        actor: `${currentUser ? currentUser.name : 'Admin'} (WA/Telegram)`,
+        note: 'Draft WA/Telegram dikonfirmasi & masuk antrean persiapan gudang.'
       });
 
       d.status = 'Terkonfirmasi (' + newOrderId + ')';
-      commitDatabaseChange('createOrder', { order: newOrderObj, items: newItems, actor: currentUser.name });
+      commitDatabaseChange('createOrder', {
+        order: newOrderObj,
+        items: newItems,
+        actor: currentUser ? currentUser.name : 'Admin',
+        draft_id: draftId
+      });
+
       updateTelegramBadge();
       closeModal();
       navigateTo('pesanan');
-      showToast(`Draft Telegram berhasil masuk ke Pesanan (${newOrderId})!`);
+      showToast(`Konfirmasi Berhasil! Pesanan ${newOrderId} (${custName}) telah masuk ke daftar Pesanan!`);
     }
 
     function rejectTelegramDraft(draftId) {
-      DB.HH_TELEGRAM = DB.HH_TELEGRAM.filter(d => d.draft_id !== draftId);
-      commitDatabaseChange();
+      DB.HH_TELEGRAM = DB.HH_TELEGRAM.filter(d => String(d.draft_id) !== String(draftId));
+      commitDatabaseChange('deleteTelegramDraft', { draft_id: draftId });
       updateTelegramBadge();
       openTelegramSimulatorModal();
     }
@@ -3575,7 +3959,7 @@
     }
 
     /*************************************************************************
-     * 12. MENU LIVE TRACKING PENGIRIMAN (SINKRON DENGAN SPREADSHEET KOSONG)
+     * 12. MENU LIVE TRACKING PENGIRIMAN
      *************************************************************************/
     function renderTrackingView(container) {
       if (!DB.HH_ORDERS || DB.HH_ORDERS.length === 0) {
@@ -3758,7 +4142,7 @@
     }
 
     /*************************************************************************
-     * 13. MENU LAPORAN, PENGGUNA, & PENGATURAN DATABASE (SINKRON 100% SPREADSHEET)
+     * 13. MENU LAPORAN, MANAJEMEN PENGGUNA (IZIN PENGEMBANG & KUNCI 1 PENGEMBANG)
      *************************************************************************/
     function renderReportsView(container) {
       const totalOrders = DB.HH_ORDERS.length;
@@ -3816,10 +4200,49 @@
     }
 
     function renderUsersView(container) {
+      const pendingUsers = DB.HH_USERS.filter(u => !isUserApproved(u));
+
       container.innerHTML = `
+        ${pendingUsers.length > 0 ? `
+          <div class="bg-amber-50 p-5 rounded-2xl border-2 border-amber-300 shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-extrabold text-sm text-amber-900"><i class="fa-solid fa-user-lock mr-1.5"></i> Permintaan Izin Pendaftaran Manager, Admin & Gudang (${pendingUsers.length} Menunggu)</h3>
+                <p class="text-xs text-amber-800">Hanya <b>Pengembang (Developer)</b> yang dapat memberikan izin konfirmasi pendaftaran di bawah ini.</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              ${pendingUsers.map(u => `
+                <div class="bg-white p-4 rounded-xl border border-amber-200 flex items-center justify-between gap-3 text-xs">
+                  <div>
+                    <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-black uppercase text-[10px]">Minta Izin Role: ${u.role}</span>
+                    <h4 class="font-extrabold text-sm text-slate-900 mt-1">${u.name}</h4>
+                    <p class="text-slate-500">${u.email} • WA: ${u.phone || '-'}</p>
+                  </div>
+                  ${currentUser.role === 'pengembang' ? `
+                    <div class="flex flex-col sm:flex-row gap-1.5 shrink-0">
+                      <button onclick="approvePendingUserByDeveloper('${u.user_id}')" class="px-3.5 py-2 rounded-xl bg-[#053f28] hover:bg-[#04301e] text-[#fde002] font-extrabold">
+                        <i class="fa-solid fa-check mr-1"></i> Izinkan
+                      </button>
+                      <button onclick="deleteUserCRUD('${u.user_id}')" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold">
+                        Tolak
+                      </button>
+                    </div>
+                  ` : `
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 font-bold text-[11px]">Menunggu Pengembang</span>
+                  `}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-extrabold text-sm text-[#053f28]">Manajemen Pengguna & Role (CRUD)</h3>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="font-extrabold text-sm text-[#053f28]">Manajemen Pengguna & Role (CRUD)</h3>
+              <p class="text-[11px] text-slate-500">Akun <b>Pengembang</b> dikunci maksimal 1 orang saja dan tidak dapat diubah/dihapus demi keamanan sistem.</p>
+            </div>
             <button onclick="openUserModal()" class="px-3.5 py-2 rounded-xl bg-[#053f28] text-[#fde002] text-xs font-extrabold">+ Tambah Pengguna</button>
           </div>
           <div class="overflow-x-auto">
@@ -3832,24 +4255,50 @@
                   <th class="p-3">No. Telepon</th>
                   <th class="p-3">Cabang</th>
                   <th class="p-3">Role Akses</th>
+                  <th class="p-3">Status Izin</th>
                   <th class="p-3 text-right">Aksi CRUD</th>
                 </tr>
               </thead>
               <tbody class="divide-y">
-                ${DB.HH_USERS.map(u => `
-                  <tr class="hover:bg-slate-50">
-                    <td class="p-3 font-bold text-[#053f28]">${u.user_id}</td>
-                    <td class="p-3 font-bold">${u.name}</td>
-                    <td class="p-3">${u.email}</td>
-                    <td class="p-3">${u.phone || '-'}</td>
-                    <td class="p-3 font-semibold">${u.branch_id || '-'}</td>
-                    <td class="p-3"><span class="px-2.5 py-1 rounded-lg bg-[#053f28] text-[#fde002] font-extrabold uppercase text-[10px]">${u.role}</span></td>
-                    <td class="p-3 text-right space-x-1">
-                      <button onclick="openUserModal('${u.user_id}')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold"><i class="fa-solid fa-pen"></i> Edit</button>
-                      <button onclick="deleteUserCRUD('${u.user_id}')" class="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                  </tr>
-                `).join('')}
+                ${DB.HH_USERS.map(u => {
+                  const isDevUser = String(u.role || '').toLowerCase() === 'pengembang';
+                  const approved = isUserApproved(u);
+                  return `
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-bold text-[#053f28]">${u.user_id}</td>
+                      <td class="p-3 font-bold">${u.name}</td>
+                      <td class="p-3">${u.email}</td>
+                      <td class="p-3">${u.phone || '-'}</td>
+                      <td class="p-3 font-semibold">${u.branch_id || '-'}</td>
+                      <td class="p-3">
+                        <span class="px-2.5 py-1 rounded-lg ${isDevUser ? 'bg-amber-400 text-[#053f28]' : 'bg-[#053f28] text-[#fde002]'} font-extrabold uppercase text-[10px]">
+                          ${u.role} ${isDevUser ? '🔒' : ''}
+                        </span>
+                      </td>
+                      <td class="p-3">
+                        ${approved
+                          ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-[#053f28] font-bold text-[10px]">Aktif / Diizinkan</span>`
+                          : `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px]">Menunggu Izin Pengembang</span>`
+                        }
+                      </td>
+                      <td class="p-3 text-right space-x-1 whitespace-nowrap">
+                        ${isDevUser ? `
+                          <button disabled class="px-2.5 py-1 rounded bg-slate-100 text-slate-400 font-bold cursor-not-allowed" title="Pengembang dikunci & tidak dapat diubah">
+                            <i class="fa-solid fa-lock"></i> Terkunci (Pengembang)
+                          </button>
+                        ` : `
+                          ${!approved && currentUser.role === 'pengembang' ? `
+                            <button onclick="approvePendingUserByDeveloper('${u.user_id}')" class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                              <i class="fa-solid fa-check"></i> Izinkan
+                            </button>
+                          ` : ''}
+                          <button onclick="openUserModal('${u.user_id}')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold"><i class="fa-solid fa-pen"></i> Edit</button>
+                          <button onclick="deleteUserCRUD('${u.user_id}')" class="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold"><i class="fa-solid fa-trash"></i></button>
+                        `}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -3857,8 +4306,29 @@
       `;
     }
 
+    function approvePendingUserByDeveloper(userId) {
+      if (!currentUser || currentUser.role !== 'pengembang') {
+        showToast('Hanya Pengembang yang dapat memberikan izin konfirmasi!', 'error');
+        return;
+      }
+      const u = DB.HH_USERS.find(x => String(x.user_id) === String(userId));
+      if (!u) return;
+      u.active = true;
+      commitDatabaseChange('upsertUser', { user: u });
+      logActivity(`Pengembang menyetujui pendaftaran akun ${u.name} (${u.role})`);
+      renderSidebarMenu();
+      navigateTo('pengguna');
+      showToast(`Akun ${u.name} (${u.role.toUpperCase()}) telah diizinkan & sekarang aktif!`, 'success');
+    }
+
     function openUserModal(userId = '') {
       const existing = DB.HH_USERS.find(u => u.user_id === userId);
+      if (existing && String(existing.role || '').toLowerCase() === 'pengembang') {
+        showToast('Akun Pengembang sudah terdaftar dan dikunci agar tidak disalahgunakan!', 'warning');
+        return;
+      }
+      const devAlreadyExists = hasRegisteredDeveloper(userId);
+
       openModal(existing ? `Edit Pengguna ${existing.name}` : 'Tambah Akun Pengguna Baru', `
         <form onsubmit="saveUserCRUD(event, '${userId}')" class="space-y-3 text-xs">
           <div>
@@ -3879,7 +4349,12 @@
             <div>
               <label class="font-bold block mb-1">Role Hak Akses *</label>
               <select id="crudUsrRole" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold">
-                ${['admin', 'gudang', 'kurir', 'manager', 'pengembang'].map(r => `<option value="${r}" ${existing && existing.role === r ? 'selected' : ''}>${r.toUpperCase()}</option>`).join('')}
+                ${['admin', 'gudang', 'kurir', 'manager', 'pengembang'].map(r => {
+                  const lockDev = r === 'pengembang' && devAlreadyExists;
+                  return `<option value="${r}" ${existing && existing.role === r ? 'selected' : ''} ${lockDev ? 'disabled' : ''}>
+                    ${r.toUpperCase()} ${lockDev ? '(Sudah Terdaftar - Terkunci)' : ''}
+                  </option>`;
+                }).join('')}
               </select>
             </div>
             <div>
@@ -3909,11 +4384,25 @@
       const branch_id = document.getElementById('crudUsrBranch').value;
       const pass = document.getElementById('crudUsrPass').value;
 
+      // 3. CEGAH PERUBAHAN ROLE KE PENGEMBANG JIKA PENGEMBANG SUDAH ADA
+      if (role === 'pengembang' && hasRegisteredDeveloper(userId)) {
+        showToast('Tidak dapat mengubah role menjadi Pengembang! Pengembang hanya dibatasi 1 orang.', 'error');
+        return;
+      }
+
+      // 2. JIKA BUKAN PENGEMBANG YANG MENAMBAH MANAGER/ADMIN/GUDANG, WAJIB IZIN PENGEMBANG
+      const needsApproval = ['manager', 'admin', 'gudang'].includes(role) && (!currentUser || currentUser.role !== 'pengembang');
+
       let targetUser = null;
       if (userId) {
         const u = DB.HH_USERS.find(x => x.user_id === userId);
         if (u) {
+          if (String(u.role || '').toLowerCase() === 'pengembang') {
+            showToast('Data Pengembang dikunci dan tidak dapat diubah!', 'error');
+            return;
+          }
           u.name = name; u.email = email; u.phone = phone; u.role = role; u.branch_id = branch_id;
+          if (needsApproval) u.active = false;
           if (pass) u.password_hash = await sha256Hash(pass);
           targetUser = u;
         }
@@ -3925,20 +4414,30 @@
           branch_id: branch_id,
           vehicle: role === 'kurir' ? 'Armada Kurir HH' : '-',
           password_hash: passHash,
-          active: true
+          active: !needsApproval
         };
         DB.HH_USERS.push(targetUser);
       }
       commitDatabaseChange('upsertUser', { user: targetUser });
       closeModal();
       navigateTo('pengguna');
-      showToast('Data pengguna berhasil disimpan ke Database!');
+      if (needsApproval) {
+        showToast(`Akun ${name} disimpan dan menunggu konfirmasi izin dari Pengembang!`, 'warning');
+      } else {
+        showToast('Data pengguna berhasil disimpan ke Database!');
+      }
     }
 
     function deleteUserCRUD(userId) {
       if (DB.HH_USERS.length <= 1) return;
+      const target = DB.HH_USERS.find(u => u.user_id === userId);
+      if (target && String(target.role || '').toLowerCase() === 'pengembang') {
+        showToast('Akun Pengembang utama tidak dapat dihapus!', 'error');
+        return;
+      }
       DB.HH_USERS = DB.HH_USERS.filter(u => u.user_id !== userId);
       commitDatabaseChange('deleteUser', { user_id: userId });
+      renderSidebarMenu();
       navigateTo('pengguna');
       showToast('Pengguna dihapus.', 'info');
     }
@@ -3987,7 +4486,6 @@
       syncWithGASBackend(true);
     }
 
-    // PROSES REFRESH MENYELURUH (MENGGANTIKAN DATA LOKAL DENGAN DATA ASLI SPREADSHEET WALAUPUN KOSONG)
     async function syncWithGASBackend(showFeedback = true) {
       const icon = document.getElementById('syncIcon');
       if (icon) icon.classList.add('fa-spin');
@@ -4007,17 +4505,29 @@
         if (json && json.status === 'success' && json.data) {
           const oldSnapshot = JSON.stringify(DB);
 
-          // PERBAIKAN BUG UTAMA: Timpa seluruh array sheet meskipun kosong (length === 0)
-          // agar jika Spreadsheet dihapus/dikosongkan, data di Aplikasi ikut kosong 100%!
+          // Pertahankan draft lokal WA/Telegram yang sedang menunggu konfirmasi agar tidak hilang saat auto-sync
+          const localPendingDrafts = (DB.HH_TELEGRAM || []).filter(d => d.status === 'Draft Menunggu Konfirmasi');
+
           ALL_SHEET_KEYS.forEach(sheetKey => {
             if (Array.isArray(json.data[sheetKey])) {
               if (sheetKey === 'HH_USERS' && json.data[sheetKey].length === 0) {
                 DB.HH_USERS = JSON.parse(JSON.stringify(DEFAULT_DB.HH_USERS));
+              } else if (sheetKey === 'HH_TELEGRAM') {
+                const remoteDrafts = json.data.HH_TELEGRAM;
+                const mergedDrafts = [...remoteDrafts];
+                localPendingDrafts.forEach(ld => {
+                  if (!mergedDrafts.some(rd => String(rd.draft_id) === String(ld.draft_id))) {
+                    mergedDrafts.unshift(ld);
+                  }
+                });
+                DB.HH_TELEGRAM = mergedDrafts;
               } else {
                 DB[sheetKey] = json.data[sheetKey];
               }
             }
           });
+
+          enforceSingleDeveloperUI();
 
           if (currentUser) {
             const freshUser = DB.HH_USERS.find(u => String(u.user_id) === String(currentUser.user_id) || u.email.toLowerCase() === currentUser.email.toLowerCase());
@@ -4036,7 +4546,9 @@
             if (currentUser) navigateTo(currentView);
           } else if (currentUser && JSON.stringify(DB) !== oldSnapshot) {
             const activeTag = document.activeElement ? document.activeElement.tagName : '';
-            if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag)) {
+            const modalOverlay = document.getElementById('modalOverlay');
+            const isModalOpen = modalOverlay && !modalOverlay.classList.contains('hidden');
+            if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag) && !isModalOpen) {
               navigateTo(currentView);
             }
           }
