@@ -203,12 +203,6 @@
              class="w-44 sm:w-52 h-auto object-contain z-20"
              onerror="this.src='https://placehold.co/220x120/ffffff/138a54?text=H%26H+Delivery'" />
         <p class="text-[12px] font-bold text-[#138a54] mt-2 tracking-tight text-center">Buah & Sayur Segar, Langsung diantar!</p>
-
-        <!-- Tombol Install Aplikasi di Semua Perangkat HP -->
-        <button type="button" onclick="triggerInstallApp()" class="mt-3 px-4 py-2 rounded-full bg-[#053f28] hover:bg-[#04301e] text-[#fde002] font-extrabold text-[11px] shadow-md flex items-center gap-2 transition border border-[#fde002]/40">
-          <i class="fa-solid fa-mobile-screen-button text-sm"></i>
-          <span>Instal Aplikasi di HP</span>
-        </button>
       </div>
 
       <!-- Dummy buttons untuk kompatibilitas -->
@@ -383,9 +377,6 @@
             <span class="w-2 h-2 rounded-full bg-slate-400"></span> Nonaktif
           </span>
         </div>
-        <button onclick="triggerInstallApp()" class="w-full py-2 px-3 rounded-xl bg-hh-50 hover:bg-hh-100 text-[#053f28] border border-hh-200 font-extrabold text-xs flex items-center justify-center gap-2 transition">
-          <i class="fa-solid fa-download"></i> Instal Aplikasi di HP
-        </button>
         <button onclick="requestLogoutConfirmation()" class="w-full py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs flex items-center justify-center gap-2 transition">
           <i class="fa-solid fa-power-off"></i> Keluar Akun
         </button>
@@ -409,9 +400,6 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="triggerInstallApp()" class="px-2.5 py-1 rounded-lg bg-white/15 text-[#fde002] text-[11px] font-bold flex items-center gap-1" title="Instal Aplikasi">
-            <i class="fa-solid fa-download"></i> Instal
-          </button>
           <span id="mobileRoleBadge" class="px-2.5 py-1 rounded-lg bg-[#fde002] text-[#053f28] text-xs font-extrabold uppercase">ADMIN</span>
         </div>
       </header>
@@ -689,7 +677,13 @@
     function isUserApproved(userObj) {
       if (!userObj) return false;
       const val = userObj.active;
-      if (val === false || String(val).toLowerCase() === 'false' || String(val).toUpperCase() === 'PENDING') {
+      if (
+        val === false ||
+        val === 0 ||
+        String(val).trim().toLowerCase() === 'false' ||
+        String(val).trim().toUpperCase() === 'PENDING' ||
+        String(val).trim() === '0'
+      ) {
         return false;
       }
       return true;
@@ -784,7 +778,7 @@
     }
 
     /*************************************************************************
-     * 1. KONFIGURASI MENU & HAK AKSES ROLE
+     * 1. KONFIGURASI MENU & HAK AKSES ROLE (MENU GUDANG & STOK DIHILANGKAN)
      *************************************************************************/
     const MENU_CONFIG = [
       { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie', roles: ['admin', 'gudang', 'kurir', 'manager', 'pengembang'] },
@@ -793,7 +787,6 @@
       { id: 'pelanggan', label: 'Pelanggan (CRUD)', icon: 'fa-users', roles: ['admin', 'manager', 'pengembang'] },
       { id: 'produk', label: 'Produk Buah & Sayur', icon: 'fa-apple-whole', roles: ['admin', 'gudang', 'manager', 'pengembang'] },
       { id: 'cabang', label: 'Cabang', icon: 'fa-building', roles: ['admin', 'manager', 'pengembang'] },
-      { id: 'gudang', label: 'Gudang & Stok', icon: 'fa-warehouse', roles: ['admin', 'gudang', 'manager', 'pengembang'] },
       { id: 'persiapan', label: 'Persiapan Barang (QC)', icon: 'fa-boxes-packing', roles: ['admin', 'gudang', 'pengembang'] },
       { id: 'pengiriman', label: 'Tugas Pengiriman Kurir', icon: 'fa-truck-fast', roles: ['admin', 'kurir', 'manager', 'pengembang'] },
       { id: 'penugasan', label: 'Penugasan Kurir', icon: 'fa-user-check', roles: ['admin', 'pengembang'] },
@@ -844,7 +837,7 @@
       HH_ACTIVITY_LOG: [],
       HH_SETTINGS: {
         company_name: 'Hanam Hanum Delivery',
-        gas_webapp_url: 'https://script.google.com/macros/s/AKfycbyS4RkjQmum_7kHSb9cI7IExYq9sUnF3SJPCArHJvI-wchMuIsN60_cEBafT57M5hhZzg/exec',
+        gas_webapp_url: 'https://script.google.com/macros/s/AKfycby2an51h76nqgzBKlCWjPB1j2IigEbaR-3qiDHHuQtdHmnESOu4Lfa_rIC1VK5IL0ly6Q/exec',
         spreadsheet_id: '1xZF01_8HbPIcjomang4XHhmKVFx_EXSRLEo12Zpw49E',
         drive_folder_id: '13gCbISldFvaTHSQdJ0e023Ry2DQ9U0jJ',
         telegram_bot_username: '@HanamHanumOrderBot',
@@ -993,89 +986,336 @@
       copyTextToClipboard(trackingUrl, `Link Live Tracking Pelanggan (${orderId}) berhasil disalin!`);
     }
 
+    // HELPER KODE CABANG & KODE PRODUK DINAMIS (JAKARTA -> JKT, PEKANBARU -> PBR, DST.)
+    function getBranchPrefixCode(branchObj, orderObj) {
+      const text = `${branchObj ? branchObj.name : ''} ${branchObj ? branchObj.address : ''} ${orderObj ? orderObj.customer_address : ''} ${orderObj ? orderObj.customer_name : ''}`.toLowerCase();
+      if (text.includes('pekanbaru') || text.includes('pekan baru') || text.includes('riau') || text.includes('pbr') || text.includes('ska')) return 'PBR';
+      if (text.includes('jakarta') || text.includes('jkt') || text.includes('ciracas') || text.includes('bogor')) return 'JKT';
+      if (text.includes('bandung') || text.includes('bdg')) return 'BDG';
+      if (text.includes('surabaya') || text.includes('sby')) return 'SBY';
+      if (text.includes('medan') || text.includes('mdn')) return 'MDN';
+      if (text.includes('semarang') || text.includes('smg')) return 'SMG';
+      if (text.includes('bali') || text.includes('denpasar') || text.includes('dps')) return 'DPS';
+      if (text.includes('makassar') || text.includes('mks')) return 'MKS';
+      if (text.includes('palembang') || text.includes('plm')) return 'PLM';
+      if (text.includes('tangerang') || text.includes('tng')) return 'TNG';
+      if (text.includes('bekasi') || text.includes('bks')) return 'BKS';
+      if (text.includes('depok') || text.includes('dpk')) return 'DPK';
+
+      if (branchObj && branchObj.name) {
+        const clean = branchObj.name.replace(/cabang|utama|pusat|gudang|hanam|hanum/gi, '').trim();
+        const consonants = clean.replace(/[^a-zA-Z]/g, '').replace(/[aeiouAEIOU]/g, '').toUpperCase();
+        if (consonants.length >= 3) return consonants.slice(0, 3);
+        const letters = clean.replace(/[^a-zA-Z]/g, '').toUpperCase();
+        if (letters.length >= 3) return letters.slice(0, 3);
+      }
+      return 'JKT';
+    }
+
+    function generateProductItemCode(productName, branchPrefix) {
+      const prefix = branchPrefix || 'JKT';
+      const cleanName = String(productName || 'PRD').replace(/\([^)]*\)/g, ' ').trim();
+      const words = cleanName.split(/[\s\-_\/]+/).filter(Boolean);
+      if (words.length === 0) return `${prefix}-PRD`;
+
+      const dict = {
+        'apple': 'APL', 'apel': 'APL',
+        'granny': 'GSC', 'smith': 'GSC',
+        'banana': 'BNN', 'pisang': 'BNN',
+        'carrot': 'CRT', 'wortel': 'CRT',
+        'cucumber': 'CCB', 'timun': 'CCB', 'kyuri': 'CCB',
+        'pineapple': 'PNL', 'nanas': 'PNL',
+        'watermelon': 'WM', 'semangka': 'WM',
+        'beetroot': 'BTR', 'bit': 'BTR',
+        'celery': 'CLR', 'seledri': 'CLR',
+        'orange': 'ORG', 'jeruk': 'ORG',
+        'sunkist': 'SKT', 'lemon': 'LMN',
+        'melon': 'MLN', 'papaya': 'PPY', 'pepaya': 'PPY',
+        'mango': 'MGO', 'mangga': 'MGO',
+        'avocado': 'AVC', 'alpukat': 'AVC',
+        'tomato': 'TMT', 'tomat': 'TMT',
+        'garlic': 'GRL', 'onion': 'ONN',
+        'potato': 'PTT', 'kentang': 'PTT',
+        'broccoli': 'BRC', 'brokoli': 'BRC'
+      };
+
+      const makeCode = (w) => {
+        const lw = w.toLowerCase();
+        if (dict[lw]) return dict[lw];
+        if (/^[a-zA-Z0-9]{2,3}$/.test(w) && /\d/.test(w)) return w.toUpperCase();
+        const cons = w.replace(/[^a-zA-Z0-9]/g, '').replace(/[aeiouAEIOU]/g, '').toUpperCase();
+        if (cons.length >= 2) return cons.slice(0, 3);
+        return w.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 3);
+      };
+
+      const firstPart = makeCode(words[0]);
+      if (words.length === 1) {
+        return `${prefix}-${firstPart}`;
+      }
+      if (words[0].toLowerCase() === 'apple' && cleanName.toLowerCase().includes('granny')) {
+        return `${prefix}-APL-GSC`;
+      }
+      const secondPart = makeCode(words[1]);
+      if (secondPart && secondPart !== firstPart) {
+        return `${prefix}-${firstPart}-${secondPart}`;
+      }
+      return `${prefix}-${firstPart}`;
+    }
+
+    // Helper Nomor Dokumen Sama Persis untuk Invoice & Surat Jalan (Delivery Order)
+    function getUnifiedDocumentNumber(ord, branchPrefix) {
+      const rawId = String(ord.order_id || '');
+      if (/^[A-Z]{2}\d{7,8}$/.test(rawId)) return rawId;
+      const digits = rawId.replace(/\D/g, '').slice(-5).padStart(5, '0');
+      const docPrefix = branchPrefix === 'PBR' ? 'PK' : (branchPrefix ? branchPrefix.slice(0, 2).toUpperCase() : 'PK');
+      return `${docPrefix}000${digits}`;
+    }
+
+    function formatDocDate(dateStr, style = 'DO') {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      let d = new Date(dateStr);
+      if (isNaN(d.getTime())) d = new Date();
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mmm = months[d.getMonth()];
+      const yyyy = d.getFullYear();
+      const yy = String(yyyy).slice(-2);
+      return style === 'DO' ? `${dd}-${mmm}-${yy}` : `${dd}/${mmm}/${yyyy}`;
+    }
+
+    function addDaysToDate(dateStr, days) {
+      let d = new Date(dateStr);
+      if (isNaN(d.getTime())) d = new Date();
+      d.setDate(d.getDate() + days);
+      return formatDocDate(d.toISOString(), 'INV');
+    }
+
+    function formatNumberID(num) {
+      return Number(num || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
+
+    // 6 & 7. CETAK INVOICE PENJUALAN & DELIVERY ORDER (SURAT JALAN) DENGAN NOMOR SAMA & TEMPLATE SESUAI GAMBAR
     function printOrderDocument(orderId, docType = 'INVOICE') {
       const ord = DB.HH_ORDERS.find(o => o.order_id === orderId);
       if (!ord) return;
       const items = DB.HH_ORDER_ITEMS.filter(i => i.order_id === orderId);
       const branch = DB.HH_BRANCHES.find(b => b.branch_id === ord.branch_id) || DB.HH_BRANCHES[0] || {
-        name: 'Hanam Hanum Delivery',
-        address: 'Jakarta',
-        phone: '-'
+        name: 'Cabang Jakarta',
+        address: 'Jalan Raya Bogor KM 21, No 14, Ciracas, Jakarta Timur, DKI Jakarta, Indonesia',
+        phone: '082113780016'
       };
+
+      const branchPrefix = getBranchPrefixCode(branch, ord);
+      const docNumber = getUnifiedDocumentNumber(ord, branchPrefix);
+      const docDateSource = ord.delivery_date || ord.created_at || new Date().toISOString();
+      const doDateFormatted = formatDocDate(docDateSource, 'DO');
+      const invDateFormatted = formatDocDate(docDateSource, 'INV');
+      const dueDateFormatted = addDaysToDate(docDateSource, 7);
       const isSuratJalan = docType === 'SURAT_JALAN';
+      const logoPrint = 'https://res.cloudinary.com/div5frz9v/image/upload/v1793770702/3x3_r3h8mg.png';
 
       const printEl = document.getElementById('printArea');
-      printEl.innerHTML = `
-        <div style="font-family: 'Inter', sans-serif; color: #0f172a; max-width: 800px; margin: 0 auto; border: 2px solid #053f28; border-radius: 12px; padding: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #053f28; padding-bottom: 16px; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; gap: 14px;">
-              <img src="${LOGO_URL}" style="width: 70px; height: 70px; object-fit: contain; background: #053f28; padding: 6px; border-radius: 10px;" />
-              <div>
-                <h1 style="margin: 0; font-size: 20px; font-weight: 900; color: #053f28;">HANAM HANUM DELIVERY</h1>
-                <p style="margin: 2px 0 0; font-size: 12px; color: #475569;">${branch.name}</p>
-                <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">${branch.address} • Telp: ${branch.phone}</p>
+
+      if (isSuratJalan) {
+        // TEMPLATE SURAT JALAN (DELIVERY ORDER) SESUAI GAMBAR 1
+        printEl.innerHTML = `
+          <div style="font-family: Arial, Helvetica, sans-serif; color: #000000; max-width: 820px; margin: 0 auto; padding: 16px; background: #ffffff;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px;">
+              <div style="display: flex; align-items: flex-start; gap: 16px; max-width: 55%;">
+                <img src="${logoPrint}" style="width: 78px; height: auto; object-fit: contain;" onerror="this.src='${LOGO_URL}'" />
+                <div>
+                  <div style="font-size: 18px; font-weight: 800; color: #000000; margin-bottom: 4px;">Ranum Induk Buah, CV</div>
+                  <div style="font-size: 13px; line-height: 1.35; color: #111111;">
+                    Jalan Raya Bogor KM 21, No 14, Ciracas, Jakarta<br/>
+                    Timur, DKI Jakarta, Indonesia
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: flex-start; gap: 14px; max-width: 43%; font-size: 13px;">
+                <div style="font-weight: 800; white-space: nowrap;">Ship To:</div>
+                <div style="text-align: right; line-height: 1.35;">
+                  <div style="font-weight: 600;">${ord.customer_name}</div>
+                  <div>${ord.customer_address || '-'}</div>
+                </div>
               </div>
             </div>
-            <div style="text-align: right;">
-              <div style="display: inline-block; background: #053f28; color: #fde002; font-weight: 900; padding: 6px 14px; border-radius: 8px; font-size: 14px;">
-                ${isSuratJalan ? 'SURAT JALAN PENGIRIMAN' : 'INVOICE TAGIHAN'}
+
+            <div style="text-align: center; margin: 18px 0 6px;">
+              <div style="font-size: 23px; font-weight: 800; letter-spacing: 0.3px;">Delivery Order ${docNumber}</div>
+              <div style="display: inline-block; border-bottom: 1px solid #000; padding: 3px 56px; font-size: 15px; font-weight: 800; margin-top: 2px;">
+                Document Date ${doDateFormatted}
               </div>
-              <p style="margin: 6px 0 0; font-size: 13px; font-weight: 800;">No: ${ord.order_id}</p>
-              <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">Tanggal Kirim: ${ord.delivery_date}</p>
             </div>
-          </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; font-size: 12px; background: #f8fafc; padding: 12px; border-radius: 8px;">
-            <div>
-              <strong style="color: #64748b; text-transform: uppercase; font-size: 10px;">Kepada Pelanggan:</strong>
-              <div style="font-weight: 800; font-size: 14px; margin-top: 2px;">${ord.customer_name}</div>
-              <div>Telp/WA: ${ord.customer_phone}</div>
-              <div>Alamat: ${ord.customer_address}</div>
-            </div>
-            <div>
-              <strong style="color: #64748b; text-transform: uppercase; font-size: 10px;">Informasi Pengiriman:</strong>
-              <div style="margin-top: 2px;">Status: <b>${ord.status}</b></div>
-              <div>Kurir Pengantar: <b>${ord.courier_name || '-'}</b></div>
-              <div>Catatan: <i>${ord.notes || '-'}</i></div>
-            </div>
-          </div>
+            <div style="font-size: 13px; margin-bottom: 6px;">PO : ${ord.po_number || ''}</div>
 
-          <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
-            <thead>
-              <tr style="background: #053f28; color: #ffffff;">
-                <th style="padding: 8px 10px; text-align: left;">No</th>
-                <th style="padding: 8px 10px; text-align: left;">Nama Produk Buah & Sayur</th>
-                <th style="padding: 8px 10px; text-align: center;">Qty Pesan</th>
-                <th style="padding: 8px 10px; text-align: center;">Qty Aktual</th>
-                ${!isSuratJalan ? `
-                  <th style="padding: 8px 10px; text-align: right;">Harga Satuan</th>
-                  <th style="padding: 8px 10px; text-align: right;">Subtotal</th>
-                ` : `<th style="padding: 8px 10px; text-align: center;">Ceklis QC</th>`}
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map((it, idx) => `
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                  <td style="padding: 8px 10px;">${idx + 1}</td>
-                  <td style="padding: 8px 10px; font-weight: 700;">${it.product_name}</td>
-                  <td style="padding: 8px 10px; text-align: center;">${it.qty_ordered} ${it.unit}</td>
-                  <td style="padding: 8px 10px; text-align: center; font-weight: 700;">${it.qty_actual} ${it.unit}</td>
-                  ${!isSuratJalan ? `
-                    <td style="padding: 8px 10px; text-align: right;">${formatRupiah(it.price)}</td>
-                    <td style="padding: 8px 10px; text-align: right; font-weight: 700;">${formatRupiah(it.qty_actual * it.price)}</td>
-                  ` : `<td style="padding: 8px 10px; text-align: center;">✓ Lolos QC</td>`}
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; border: 1.5px solid #000000;">
+              <thead>
+                <tr style="border-bottom: 1.5px solid #000000; background: #ffffff;">
+                  <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 42px; font-weight: 600;">No</th>
+                  <th style="border: 1px solid #000000; padding: 6px 10px; text-align: center; width: 175px; font-weight: 600;">Item Code</th>
+                  <th style="border: 1px solid #000000; padding: 6px 10px; text-align: center; font-weight: 600;">Item Description</th>
+                  <th style="border: 1px solid #000000; padding: 6px 10px; text-align: center; width: 100px; font-weight: 600;">Quantity</th>
+                  <th style="border: 1px solid #000000; padding: 6px 10px; text-align: center; width: 85px; font-weight: 600;">UoM</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${items.map((it, idx) => {
+                  const qtyVal = Number(it.qty_actual !== undefined && it.qty_actual !== '' ? it.qty_actual : it.qty_ordered);
+                  const itemCode = generateProductItemCode(it.product_name, branchPrefix);
+                  return `
+                    <tr>
+                      <td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;">${idx + 1}</td>
+                      <td style="border: 1px solid #000000; padding: 6px 10px; text-align: left;">${itemCode}</td>
+                      <td style="border: 1px solid #000000; padding: 6px 10px; text-align: left;">${it.product_name}</td>
+                      <td style="border: 1px solid #000000; padding: 6px 10px; text-align: center;">${qtyVal}</td>
+                      <td style="border: 1px solid #000000; padding: 6px 10px; text-align: center;">${String(it.unit || 'KG').toUpperCase()}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
 
-          ${!isSuratJalan ? `
-            <div style="text-align: right; font-size: 15px; font-weight: 900; color: #053f28; margin-bottom: 24px;">
-              TOTAL TAGIHAN: ${formatRupiah(ord.total_amount)}
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; margin-top: 56px; font-size: 13px;">
+              <div>
+                <div>Dibuat Oleh</div>
+                <div style="margin-top: 64px;">(....................)</div>
+              </div>
+              <div>
+                <div>Di Setujui Oleh</div>
+                <div style="margin-top: 64px;">(....................)</div>
+              </div>
+              <div>
+                <div>Di Kirim Oleh</div>
+                <div style="margin-top: 64px;">(....................)</div>
+              </div>
+              <div>
+                <div>Di Terima Oleh</div>
+                <div style="margin-top: 64px;">(....................)</div>
+              </div>
             </div>
-          ` : ''}
-        </div>
-      `;
+          </div>
+        `;
+      } else {
+        // TEMPLATE INVOICE PENJUALAN SESUAI GAMBAR 2
+        let grandTotal = 0;
+        const rowsHtml = items.map((it, idx) => {
+          const qtyVal = Number(it.qty_actual !== undefined && it.qty_actual !== '' ? it.qty_actual : it.qty_ordered);
+          const priceVal = Number(it.price || 0);
+          const sub = Math.round(qtyVal * priceVal);
+          grandTotal += sub;
+          const itemCode = generateProductItemCode(it.product_name, branchPrefix);
+          const bgRow = idx % 2 === 1 ? '#f8faf8' : '#ffffff';
+          return `
+            <tr style="background: ${bgRow};">
+              <td style="padding: 6px 8px; text-align: center;">${idx + 1}</td>
+              <td style="padding: 6px 8px; text-align: center;">${itemCode}</td>
+              <td style="padding: 6px 8px; text-align: left;">${it.product_name}</td>
+              <td style="padding: 6px 8px; text-align: center;">${String(it.unit || 'KG').toUpperCase()}</td>
+              <td style="padding: 6px 8px; text-align: right;">${qtyVal}</td>
+              <td style="padding: 6px 8px; text-align: right;">${formatNumberID(priceVal)}</td>
+              <td style="padding: 6px 8px; text-align: center;"></td>
+              <td style="padding: 6px 8px; text-align: right;">${formatNumberID(sub)}</td>
+            </tr>
+          `;
+        }).join('');
+
+        printEl.innerHTML = `
+          <div style="font-family: Arial, Helvetica, sans-serif; color: #000000; max-width: 820px; margin: 0 auto; padding: 16px; background: #ffffff;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 2px solid #044d15;">
+              <div style="display: flex; align-items: flex-start; gap: 16px;">
+                <img src="${logoPrint}" style="width: 78px; height: auto; object-fit: contain;" onerror="this.src='${LOGO_URL}'" />
+                <div>
+                  <div style="font-size: 18px; font-weight: 800; color: #044d15; margin-bottom: 3px;">Ranum Induk Buah, CV</div>
+                  <div style="font-size: 13px; color: #111111;">Jalan Raya Bogor KM 21, No 14, Ciracas, Jakarta Timur,</div>
+                  <div style="font-size: 13px; color: #111111; margin-top: 2px;">Ph:082113780016</div>
+                </div>
+              </div>
+              <div style="font-size: 24px; font-weight: 800; color: #044d15; letter-spacing: 0.5px;">
+                INVOICE PENJUALAN
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin: 10px 0 14px; font-size: 13px;">
+              <div style="line-height: 1.7;">
+                <div><strong style="display: inline-block; width: 95px;">Cust Name:</strong> ${ord.customer_name}</div>
+                <div><strong style="display: inline-block; width: 95px;">No.Ref:</strong> ${ord.notes || ''}</div>
+              </div>
+              <div style="line-height: 1.7; text-align: right;">
+                <div><strong style="display: inline-block; width: 120px; text-align: right; margin-right: 18px;">No. Nota:</strong> <span style="display: inline-block; width: 110px; text-align: right;">${docNumber}</span></div>
+                <div><strong style="display: inline-block; width: 120px; text-align: right; margin-right: 18px;">Document Date:</strong> <span style="display: inline-block; width: 110px; text-align: right;">${invDateFormatted}</span></div>
+                <div>
+                  <strong style="color: #d90429; margin-right: 10px;">Termin:</strong> <span style="margin-right: 12px;">7</span>
+                  <strong style="color: #d90429; margin-right: 18px;">- Jatuh Tempo:</strong>
+                  <span style="display: inline-block; width: 110px; text-align: right;">${dueDateFormatted}</span>
+                </div>
+              </div>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; border-bottom: 2px solid #044d15;">
+              <thead>
+                <tr style="background: #044d15; color: #ffffff;">
+                  <th style="padding: 7px 8px; text-align: center; width: 36px;">No</th>
+                  <th style="padding: 7px 8px; text-align: center; width: 115px;">Kode</th>
+                  <th style="padding: 7px 8px; text-align: left;">Nama Produk</th>
+                  <th style="padding: 7px 8px; text-align: center; width: 65px;">Uom</th>
+                  <th style="padding: 7px 8px; text-align: right; width: 65px;">Qty</th>
+                  <th style="padding: 7px 8px; text-align: right; width: 100px;">Harga</th>
+                  <th style="padding: 7px 8px; text-align: center; width: 60px;">Disc</th>
+                  <th style="padding: 7px 8px; text-align: right; width: 110px;">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; font-size: 13px;">
+              <div style="max-width: 55%; line-height: 1.45;">
+                <div style="font-weight: 800; margin-bottom: 6px;">Keterangan</div>
+                <div style="margin-left: 10px; margin-bottom: 6px;">
+                  1. Pembayaran hanya ke rek : BCA 1656007789<br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;An Ranum induk buah CV
+                </div>
+                <div style="margin-left: 10px;">
+                  2. Kirim bukti transfer Ke Whatsapp : 082113780016<br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;sebagai bukti pelunasan
+                </div>
+              </div>
+
+              <div style="width: 310px; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; padding: 4px 6px;">
+                  <span>Subtotal Rp.</span>
+                  <span>${formatNumberID(grandTotal)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 6px;">
+                  <span>Diskon Rp.</span>
+                  <span>0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 6px; margin-bottom: 6px;">
+                  <span>Pajak Rp.</span>
+                  <span>0</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-weight: 800; padding-right: 10px;">Grand Total Rp.</span>
+                  <div style="background: #044d15; color: #ffffff; font-weight: 800; padding: 6px 12px; min-width: 155px; text-align: right;">
+                    ${formatNumberID(grandTotal)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="border-top: 2px solid #044d15; margin-top: 8px; padding-top: 4px;">
+              <div style="text-align: right; font-size: 10px; font-weight: 800; margin-bottom: 4px;">* Harga Termasuk Pajak</div>
+              <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; padding: 0 28px; margin-top: 6px;">
+                <div>Tanda Terima</div>
+                <div>Hormat Kami</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       window.print();
     }
 
@@ -1134,9 +1374,10 @@
         return;
       }
 
-      // 2. PEMBATASAN PENDAFTARAN MANAGER, ADMIN, DAN GUDANG HARUS IZIN / KONFIRMASI PENGEMBANG
-      const requiresDeveloperApproval = ['manager', 'admin', 'gudang'].includes(role);
-      const isApprovedStatus = !requiresDeveloperApproval;
+      // 1. PEMBATASAN PENDAFTARAN MANAGER, ADMIN, DAN GUDANG: WAJIB FALSE DI DATABASE SPREADSHEET & TIDAK BISA LOGIN SEBELUM DIIZINKAN PENGEMBANG
+      const roleLower = String(role || '').toLowerCase();
+      const requiresDeveloperApproval = ['manager', 'admin', 'gudang'].includes(roleLower);
+      const isApprovedStatus = requiresDeveloperApproval ? false : true;
 
       const passHash = await sha256Hash(password);
       const defaultBranchId = (DB.HH_BRANCHES && DB.HH_BRANCHES.length > 0) ? DB.HH_BRANCHES[0].branch_id : 'BR-01';
@@ -1145,9 +1386,9 @@
         name,
         email,
         phone,
-        role,
+        role: roleLower,
         branch_id: defaultBranchId,
-        vehicle: role === 'kurir' ? 'Armada Kurir HH' : '-',
+        vehicle: roleLower === 'kurir' ? 'Armada Kurir HH' : '-',
         password_hash: passHash,
         active: isApprovedStatus
       };
@@ -1162,12 +1403,12 @@
               <i class="fa-solid fa-user-lock"></i>
             </div>
             <div class="space-y-1.5">
-              <h4 class="font-extrabold text-base text-slate-900">Pendaftaran ${role.toUpperCase()} Terkirim!</h4>
+              <h4 class="font-extrabold text-base text-slate-900">Status Akun: FALSE (Menunggu Izin Pengembang)</h4>
               <p class="text-slate-600 max-w-md mx-auto leading-relaxed">
-                Sesuai kebijakan keamanan sistem, pendaftaran untuk posisi <b>Manager, Admin, dan Gudang</b> dibatasi dan wajib mendapatkan izin / konfirmasi dari <b>Pengembang (Developer)</b> terlebih dahulu.
+                Pendaftaran Anda sebagai <b>${roleLower.toUpperCase()}</b> telah disimpan ke Database dengan status <b>FALSE (Nonaktif)</b> dan <b>TIDAK BISA LOGIN</b> sebelum dikonfirmasi / diizinkan oleh <b>Pengembang</b>.
               </p>
               <p class="text-[11px] font-bold text-[#053f28] bg-hh-50 py-2 px-3 rounded-xl border border-hh-200 inline-block mt-2">
-                Silakan hubungi Pengembang untuk menyetujui akun: ${email}
+                Akun: ${email} (Status Database: FALSE)
               </p>
             </div>
             <div class="pt-2">
@@ -1177,12 +1418,15 @@
             </div>
           </div>
         `);
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
       } else {
-        showToast(`Pendaftaran berhasil! Akun ${name} (${role.toUpperCase()}) telah aktif.`, 'success');
+        showToast(`Pendaftaran berhasil! Akun ${name} (${roleLower.toUpperCase()}) telah aktif.`, 'success');
+        document.getElementById('loginEmail').value = email;
+        document.getElementById('loginPassword').value = password;
       }
 
-      document.getElementById('loginEmail').value = email;
-      document.getElementById('loginPassword').value = password;
+      document.getElementById('registerForm').reset();
       switchAuthTab('login');
     }
 
@@ -1629,7 +1873,6 @@
         case 'pelanggan': renderCustomersView(container); break;
         case 'produk': renderProductsView(container); break;
         case 'cabang': renderBranchesView(container); break;
-        case 'gudang': renderWarehouseStockView(container); break;
         case 'persiapan': renderWarehousePrepView(container); break;
         case 'pengiriman': renderCourierDeliveriesView(container); break;
         case 'penugasan': renderAssignCourierView(container); break;
@@ -2038,10 +2281,6 @@
               <span class="font-extrabold text-[#053f28] text-right">${branchDisplay}</span>
             </div>
           </div>
-
-          <button onclick="triggerInstallApp()" class="w-full py-3 rounded-2xl bg-[#053f28] text-[#fde002] font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition">
-            <i class="fa-solid fa-download"></i> Instal Aplikasi di HP
-          </button>
 
           <button onclick="requestLogoutConfirmation()" class="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition">
             <i class="fa-solid fa-power-off"></i> Keluar Akun Kurir
@@ -2619,12 +2858,12 @@
         <div class="col-span-7 sm:col-span-8">
           <select class="w-full px-3 py-2 rounded-xl border border-slate-200 font-semibold item-prod-select">
             ${DB.HH_PRODUCTS.length > 0
-              ? DB.HH_PRODUCTS.map(p => `<option value="${p.product_id}">${p.name} (${formatRupiah(p.price)}/${p.unit}) — Stok: ${p.stock}</option>`).join('')
+              ? DB.HH_PRODUCTS.map(p => `<option value="${p.product_id}">${p.name} (${formatRupiah(p.price)} / ${p.unit})</option>`).join('')
               : `<option value="">-- Belum ada produk di Database (Tambahkan di menu Produk) --</option>`}
           </select>
         </div>
         <div class="col-span-3 sm:col-span-3">
-          <input type="number" step="0.1" min="0.5" value="2" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold item-qty-input" placeholder="Qty" />
+          <input type="number" step="0.01" min="0.01" value="1" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-bold item-qty-input" placeholder="Qty" />
         </div>
         <div class="col-span-2 sm:col-span-1 text-right">
           <button type="button" onclick="this.closest('.manual-item-row').remove()" class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100">
@@ -2715,22 +2954,25 @@
     }
 
     /*************************************************************************
-     * 7. PROSES WA VIA TELEGRAM BOT PARSER (FIXED KONFIRMASI MASUK PESANAN)
+     * 7. PROSES WA VIA TELEGRAM BOT PARSER (FILTER TANDA SILANG & PARSE LENGKAP)
      *************************************************************************/
     function openTelegramSimulatorModal() {
       const pendingDrafts = (DB.HH_TELEGRAM || []).filter(d => d.status === 'Draft Menunggu Konfirmasi');
       openModal('Integrasi Telegram Bot — Proses Pesanan WhatsApp Otomatis', `
         <div class="space-y-5 text-xs">
           <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-            <label class="block font-extrabold text-slate-800">Tempel / Copy-Paste Pesan Order dari WhatsApp / Telegram:</label>
-            <textarea id="rawWaMessageInput" rows="5" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-mono text-[11px]"
-              placeholder="Contoh:\nNama: Ibu Ratna\nHP: 081377889900\nAlamat: Jl. Kemang Raya No. 18\nTanggal Kirim: 2026-11-05\nPesanan:\n- Apel Fuji 4 Kg"></textarea>
+            <div class="flex items-center justify-between">
+              <label class="block font-extrabold text-slate-800">Tempel / Copy-Paste Pesan Order dari WhatsApp / Telegram:</label>
+              <span class="px-2 py-0.5 rounded bg-emerald-100 text-[#053f28] font-bold text-[10px]">Otomatis Abaikan Tanda Silang (❌ / ✖ / [x])</span>
+            </div>
+            <textarea id="rawWaMessageInput" rows="6" class="w-full p-3 rounded-xl border border-slate-300 bg-white font-mono text-[11px]"
+              placeholder="Contoh Format Copy WA:\nNama Outlet: Boost Juice Mall SKA Pekanbaru\nAlamat: Jl. Soekarno-Hatta No.114, Pekanbaru\nTanggal Order: 2026-11-04\nTanggal Pengiriman: 2026-11-05\nPesanan:\n✅ Apple Granny Smith China 5 kg @47500\n✅ Banana C3 (Sisiran) 2 sisir 25500\n❌ Semangka Merah 3 kg (Kosong / Batal)\n- Carrot 10 kg Rp 19.500\n- Cucumber 500 gram Rp 18.000"></textarea>
             <div class="flex flex-wrap gap-2">
               <button type="button" onclick="parseWhatsAppMessageToDraft(false)" class="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold transition">
-                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Proses Pesan WA Jadi Draft
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Filter & Jadikan Draft Order
               </button>
               <button type="button" onclick="parseWhatsAppMessageToDraft(true)" class="px-4 py-2.5 rounded-xl bg-[#053f28] hover:bg-[#04301e] text-[#fde002] font-extrabold shadow-sm transition">
-                <i class="fa-solid fa-bolt mr-1"></i> Proses & Langsung Konfirmasi Masuk Pesanan
+                <i class="fa-solid fa-bolt mr-1"></i> Filter & Langsung Konfirmasi Masuk Pesanan
               </button>
             </div>
           </div>
@@ -2739,37 +2981,67 @@
             <h4 class="font-extrabold text-slate-800">Daftar Draft WA / Telegram (${pendingDrafts.length} Menunggu Konfirmasi)</h4>
             ${pendingDrafts.map((d, idx) => {
               const safeId = String(d.draft_id || ('DRF-' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
-              const itemsArr = Array.isArray(d.parsed_items) ? d.parsed_items : [];
+              let itemsArr = Array.isArray(d.parsed_items) ? d.parsed_items : [];
+              if (itemsArr.length === 0 && d.parsed_items_json) {
+                try { itemsArr = JSON.parse(d.parsed_items_json); } catch (e) { itemsArr = []; }
+              }
               return `
                 <div class="p-4 rounded-xl border-2 border-sky-200 bg-white space-y-3">
                   <div class="flex items-center justify-between">
-                    <span class="font-extrabold text-sky-700">${d.draft_id} • Masuk: ${d.received_at || 'Baru saja'}</span>
+                    <span class="font-extrabold text-sky-700">${d.draft_id} • Order: ${d.parsed_order_date || d.received_at || 'Hari ini'}</span>
                     <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">${d.status}</span>
                   </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <div>
-                      <label class="text-[10px] font-bold text-slate-400">Nama Pelanggan</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <div class="sm:col-span-2">
+                      <label class="text-[10px] font-bold text-slate-400">Nama Outlet / Nama Customer</label>
                       <input id="drf_name_${safeId}" value="${String(d.parsed_customer || 'Pelanggan WA').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-bold" />
                     </div>
                     <div>
-                      <label class="text-[10px] font-bold text-slate-400">Nomor Telepon</label>
-                      <input id="drf_phone_${safeId}" value="${String(d.parsed_phone || '-').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
+                      <label class="text-[10px] font-bold text-slate-400">Tanggal Order</label>
+                      <input id="drf_orddate_${safeId}" type="date" value="${String(d.parsed_order_date || new Date().toISOString().slice(0, 10)).slice(0, 10)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
                     </div>
                     <div>
-                      <label class="text-[10px] font-bold text-slate-400">Tanggal Kirim</label>
+                      <label class="text-[10px] font-bold text-slate-400">Tanggal Pengiriman</label>
                       <input id="drf_date_${safeId}" type="date" value="${String(d.parsed_date || new Date().toISOString().slice(0, 10)).slice(0, 10)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
                     </div>
                   </div>
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-400">Alamat Pengiriman</label>
-                    <input id="drf_addr_${safeId}" value="${String(d.parsed_address || 'Jakarta').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-400">Nomor Telepon / WA</label>
+                      <input id="drf_phone_${safeId}" value="${String(d.parsed_phone || '-').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
+                    </div>
+                    <div class="sm:col-span-2">
+                      <label class="text-[10px] font-bold text-slate-400">Alamat Pengiriman Outlet / Customer</label>
+                      <input id="drf_addr_${safeId}" value="${String(d.parsed_address || 'Jakarta').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200" />
+                    </div>
                   </div>
-                  <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px]">
-                    <span class="font-bold text-[#053f28]">Item Terbaca:</span>
-                    ${itemsArr.length > 0
-                      ? itemsArr.map(it => `${it.product_name} (${it.qty} ${it.unit})`).join(', ')
-                      : `<span class="text-slate-500">${(d.raw_message || '').replace(/\n/g, ' • ')}</span>`}
+
+                  <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] space-y-1.5">
+                    <div class="font-extrabold text-[#053f28]">Daftar Produk Dipakai (Sudah Difilter Tanpa Tanda Silang):</div>
+                    ${itemsArr.length > 0 ? `
+                      <table class="w-full text-left border-collapse">
+                        <thead>
+                          <tr class="border-b border-slate-200 text-slate-500 text-[10px] uppercase">
+                            <th class="py-1">Nama Produk</th>
+                            <th class="py-1 text-center">Qty</th>
+                            <th class="py-1 text-center">Satuan</th>
+                            <th class="py-1 text-right">Harga Satuan</th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                          ${itemsArr.map(it => `
+                            <tr>
+                              <td class="py-1 font-bold text-slate-800">${it.product_name}</td>
+                              <td class="py-1 text-center font-bold text-[#053f28]">${it.qty}</td>
+                              <td class="py-1 text-center uppercase">${it.unit}</td>
+                              <td class="py-1 text-right font-semibold">${formatRupiah(it.price)}</td>
+                            </tr>
+                          `).join('')}
+                        </tbody>
+                      </table>
+                    ` : `<span class="text-slate-500">${(d.raw_message || '').replace(/\n/g, ' • ')}</span>`}
                   </div>
+
                   <div class="flex justify-end gap-2 pt-1">
                     <button type="button" onclick="rejectTelegramDraft('${d.draft_id}')" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold cursor-pointer">
                       Hapus Draft
@@ -2786,6 +3058,26 @@
       `);
     }
 
+    function normalizeDateStringFromWA(str) {
+      if (!str) return new Date().toISOString().slice(0, 10);
+      const s = str.trim();
+      const iso = s.match(/(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})/);
+      if (iso) {
+        return `${iso[1]}-${String(iso[2]).padStart(2, '0')}-${String(iso[3]).padStart(2, '0')}`;
+      }
+      const dmy = s.match(/(\d{1,2})[\-\/\s](\d{1,2}|[a-zA-Z]{3,})[\-\/\s](\d{2,4})/);
+      if (dmy) {
+        const day = String(dmy[1]).padStart(2, '0');
+        let monStr = dmy[2].toLowerCase();
+        const mapMon = { jan: '01', feb: '02', mar: '03', apr: '04', mei: '05', may: '05', jun: '06', jul: '07', agu: '08', aug: '08', sep: '09', okt: '10', oct: '10', nov: '11', des: '12', dec: '12' };
+        let mon = mapMon[monStr.slice(0, 3)] || String(parseInt(monStr, 10) || (new Date().getMonth() + 1)).padStart(2, '0');
+        let yr = dmy[3];
+        if (yr.length === 2) yr = '20' + yr;
+        return `${yr}-${mon}-${day}`;
+      }
+      return new Date().toISOString().slice(0, 10);
+    }
+
     function parseWhatsAppMessageToDraft(autoConfirmNow = false) {
       const rawEl = document.getElementById('rawWaMessageInput');
       const raw = rawEl ? rawEl.value.trim() : '';
@@ -2794,84 +3086,119 @@
         return;
       }
 
-      const nameMatch = raw.match(/(?:nama|pelanggan|pemesan|customer)\s*[:\-]\s*(.+)/i);
-      const phoneMatch = raw.match(/(?:hp|wa|telp|telepon|no)\s*[:\-]?\s*([0-9\+]{9,15})/i) || raw.match(/(08[0-9]{8,12})/);
-      const addrMatch = raw.match(/(?:alamat|lokasi|kirim ke|tujuan)\s*[:\-]\s*(.+)/i);
-      const dateMatch = raw.match(/(?:tanggal|tgl)\s*(?:kirim)?\s*[:\-]\s*(\d{4}-\d{2}-\d{2})/i);
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const nameMatch = raw.match(/(?:nama\s*outlet|outlet|nama\s*customer|customer|nama\s*pelanggan|pelanggan|pemesan|nama|ship\s*to|kepada)\s*[:\-]\s*(.+)/i);
+      const phoneMatch = raw.match(/(?:hp|wa|telp|telepon|no\s*hp|no\.?\s*wa|ph)\s*[:\-]?\s*([0-9\+]{9,15})/i) || raw.match(/(08[0-9]{8,12})/);
+      const addrMatch = raw.match(/(?:alamat|lokasi|kirim\s*ke|tujuan)\s*[:\-]\s*(.+)/i);
+      const orderDateMatch = raw.match(/(?:tanggal\s*order|tgl\s*order|order\s*date|document\s*date)\s*[:\-]?\s*([0-9a-zA-Z\-\/]+)/i);
+      const delivDateMatch = raw.match(/(?:tanggal\s*pengiriman|tgl\s*pengiriman|tanggal\s*kirim|tgl\s*kirim|jadwal\s*kirim|pengiriman)\s*[:\-]?\s*([0-9a-zA-Z\-\/]+)/i);
+
+      const parsedOrderDate = orderDateMatch ? normalizeDateStringFromWA(orderDateMatch[1]) : todayIso;
+      const parsedDelivDate = delivDateMatch ? normalizeDateStringFromWA(delivDateMatch[1]) : parsedOrderDate;
 
       const parsedItems = [];
       const lines = raw.split('\n');
+      let skippedCrossedCount = 0;
+
+      // Daftar satuan yang didukung: gram, kiloan/kg, pcs, krat, dus, sisir, pack, ikat, box, buah
+      const unitRegexStr = '(kg|kiloan|kilo|gram|gr|g|pcs|pc|krat|crt|dus|dos|box|sisir|sisiran|pack|pak|ikat|buah|biji|porsi|paket)';
 
       lines.forEach(line => {
         const cleanLine = line.trim();
         if (!cleanLine) return;
 
-        // 1. Cocokkan dengan katalog produk jika ada
-        if (Array.isArray(DB.HH_PRODUCTS) && DB.HH_PRODUCTS.length > 0) {
-          DB.HH_PRODUCTS.forEach(prod => {
-            const firstWord = String(prod.name || '').split(' ')[0].toLowerCase();
-            if (firstWord && cleanLine.toLowerCase().includes(firstWord)) {
-              const qtyMatch = cleanLine.match(/(\d+(?:[\.,]\d+)?)\s*(kg|sisir|pack|ikat|box|buah|pcs|gram|gr)?/i);
-              if (qtyMatch && !parsedItems.some(x => x.product_id === prod.product_id)) {
-                parsedItems.push({
-                  product_id: prod.product_id,
-                  product_name: prod.name,
-                  qty: parseFloat(qtyMatch[1].replace(',', '.')) || 1,
-                  unit: prod.unit || 'Kg',
-                  price: Number(prod.price) || 25000
-                });
-              }
-            }
-          });
+        // Lewati baris header metadata (Nama Outlet, Tanggal Order, Tanggal Pengiriman, Alamat, HP, Pesanan:)
+        if (/^(?:nama\s*outlet|outlet|nama\s*customer|customer|nama\s*pelanggan|pelanggan|pemesan|nama|ship\s*to|hp|wa|telp|telepon|alamat|lokasi|tanggal\s*order|tgl\s*order|tanggal\s*pengiriman|tgl\s*pengiriman|tanggal\s*kirim|tgl\s*kirim|pesanan|order|daftar\s*pesanan)\s*[:\-]?$/i.test(cleanLine)) {
+          return;
+        }
+        if (/^(?:nama\s*outlet|outlet|nama\s*customer|customer|nama\s*pelanggan|pelanggan|pemesan|nama|ship\s*to|hp|wa|telp|telepon|alamat|lokasi|tanggal\s*order|tgl\s*order|tanggal\s*pengiriman|tgl\s*pengiriman|tanggal\s*kirim|tgl\s*kirim)\s*[:\-]/i.test(cleanLine)) {
+          return;
         }
 
-        // 2. Jika baris diawali tanda "-" atau "•" (format list WA) namun belum masuk katalog produk
-        if (/^[\-\•\*]\s*/.test(cleanLine)) {
-          const itemText = cleanLine.replace(/^[\-\•\*]\s*/, '').trim();
-          const qtyMatch = itemText.match(/(.+?)\s+(\d+(?:[\.,]\d+)?)\s*(kg|sisir|pack|ikat|box|buah|pcs|karton)?/i);
-          if (qtyMatch) {
-            const pName = qtyMatch[1].replace(/[:\-]$/, '').trim();
-            const pQty = parseFloat(qtyMatch[2].replace(',', '.')) || 1;
-            const pUnit = qtyMatch[3] || 'Kg';
-            if (!parsedItems.some(x => x.product_name.toLowerCase() === pName.toLowerCase())) {
-              parsedItems.push({
-                product_id: generateUID('PRD-WA'),
-                product_name: pName,
-                qty: pQty,
-                unit: pUnit,
-                price: 25000
-              });
-            }
-          } else if (itemText.length > 2 && !parsedItems.some(x => x.product_name.toLowerCase() === itemText.toLowerCase())) {
-            parsedItems.push({
-              product_id: generateUID('PRD-WA'),
-              product_name: itemText,
-              qty: 1,
-              unit: 'Pack',
-              price: 25000
-            });
+        // 4. FILTER PRODUK: ABAIKAN BARIS YANG MEMILIKI TANDA SILANG (❌, ✖, ✗, ✘, ❌, [x], (x), ~coret~, batal, kosong, cancel)
+        const hasCrossMark = /[❌✖✗✘❎✕]|^\s*[\[\(]?[xX][\]\)]\s+|^\s*[xX]\s+[\w]|~.+~|\b(batal|cancel|kosong|tidak\s*dipakai|skip)\b/i.test(cleanLine);
+        if (hasCrossMark) {
+          skippedCrossedCount++;
+          return;
+        }
+
+        // Bersihkan simbol centang / bullet / nomor urut di awal baris
+        let itemLine = cleanLine
+          .replace(/^[✅✔☑•\-\*\+]+\s*/, '')
+          .replace(/^\d+[\.\)]\s*/, '')
+          .trim();
+
+        if (!itemLine || itemLine.length < 2) return;
+
+        // Ekstrak Harga bila tertulis di baris WA (misal: @47500, Rp 47.500, 47500)
+        let extractedPrice = null;
+        const priceMatch = itemLine.match(/(?:@|rp\.?\s*|harga\s*[:\-]?\s*)(\d{1,3}(?:[\.,]\d{3})+|\d{4,7})/i) ||
+                           itemLine.match(/\s+(\d{1,3}(?:\.\d{3})+|\d{4,7})\s*$/);
+        if (priceMatch) {
+          const rawPrice = priceMatch[1].replace(/[\.,]/g, '');
+          const numPrice = parseInt(rawPrice, 10);
+          if (numPrice >= 500) {
+            extractedPrice = numPrice;
+            itemLine = itemLine.replace(priceMatch[0], ' ').trim();
           }
+        }
+
+        // Ekstrak Qty dan Satuan (gram, kiloan, kg, pcs, krat, dus, dll.)
+        const qtyUnitRegex = new RegExp(`(\\d+(?:[\\.,]\\d+)?)\\s*${unitRegexStr}\\b`, 'i');
+        const qtyUnitMatch = itemLine.match(qtyUnitRegex);
+
+        let qtyVal = 1;
+        let unitVal = 'KG';
+        let prodNameClean = itemLine;
+
+        if (qtyUnitMatch) {
+          qtyVal = parseFloat(qtyUnitMatch[1].replace(',', '.')) || 1;
+          const rawUnit = qtyUnitMatch[2].toLowerCase();
+          if (rawUnit === 'kiloan' || rawUnit === 'kilo' || rawUnit === 'kg') unitVal = 'KG';
+          else if (rawUnit === 'gram' || rawUnit === 'gr' || rawUnit === 'g') unitVal = 'Gram';
+          else if (rawUnit === 'pcs' || rawUnit === 'pc') unitVal = 'Pcs';
+          else if (rawUnit === 'krat' || rawUnit === 'crt') unitVal = 'Krat';
+          else if (rawUnit === 'dus' || rawUnit === 'dos') unitVal = 'Dus';
+          else unitVal = qtyUnitMatch[2].toUpperCase();
+
+          prodNameClean = itemLine.replace(qtyUnitMatch[0], ' ').replace(/[:\-\@]+$/, '').trim();
+        } else {
+          // Cek angka saja di akhir baris
+          const trailingNum = itemLine.match(/(.+?)\s+(\d+(?:[\.,]\d+)?)$/);
+          if (trailingNum) {
+            prodNameClean = trailingNum[1].replace(/[:\-]+$/, '').trim();
+            qtyVal = parseFloat(trailingNum[2].replace(',', '.')) || 1;
+          }
+        }
+
+        // Cari kecocokan dengan Master Produk di DB.HH_PRODUCTS untuk harga/satuan default
+        let matchedMaster = null;
+        if (Array.isArray(DB.HH_PRODUCTS) && DB.HH_PRODUCTS.length > 0 && prodNameClean) {
+          matchedMaster = DB.HH_PRODUCTS.find(p =>
+            String(p.name || '').toLowerCase() === prodNameClean.toLowerCase() ||
+            prodNameClean.toLowerCase().includes(String(p.name || '').toLowerCase()) ||
+            String(p.name || '').toLowerCase().includes(prodNameClean.toLowerCase())
+          );
+        }
+
+        const finalProdName = matchedMaster ? matchedMaster.name : prodNameClean;
+        const finalUnit = qtyUnitMatch ? unitVal : (matchedMaster && matchedMaster.unit ? matchedMaster.unit : unitVal);
+        const finalPrice = extractedPrice !== null ? extractedPrice : (matchedMaster ? Number(matchedMaster.price) : 25000);
+
+        if (finalProdName && finalProdName.length >= 2) {
+          parsedItems.push({
+            product_id: matchedMaster ? matchedMaster.product_id : generateUID('PRD'),
+            product_name: finalProdName,
+            qty: qtyVal,
+            unit: finalUnit,
+            price: finalPrice
+          });
         }
       });
 
       if (parsedItems.length === 0) {
-        if (Array.isArray(DB.HH_PRODUCTS) && DB.HH_PRODUCTS.length > 0) {
-          parsedItems.push({
-            product_id: DB.HH_PRODUCTS[0].product_id,
-            product_name: DB.HH_PRODUCTS[0].name,
-            qty: 2,
-            unit: DB.HH_PRODUCTS[0].unit || 'Kg',
-            price: Number(DB.HH_PRODUCTS[0].price) || 25000
-          });
-        } else {
-          parsedItems.push({
-            product_id: generateUID('PRD-WA'),
-            product_name: 'Paket Buah & Sayur Segar (Order WA)',
-            qty: 1,
-            unit: 'Paket',
-            price: 50000
-          });
-        }
+        showToast('Tidak ada produk aktif yang terbaca (atau semua produk bertanda silang ❌).', 'warning');
+        return;
       }
 
       const newDraftId = generateUID('TG');
@@ -2879,10 +3206,11 @@
         draft_id: newDraftId,
         received_at: nowFormatted(),
         raw_message: raw,
-        parsed_customer: nameMatch ? nameMatch[1].trim() : 'Pelanggan WhatsApp',
+        parsed_customer: nameMatch ? nameMatch[1].trim() : 'Outlet / Customer WA',
         parsed_phone: phoneMatch ? phoneMatch[1].trim() : '08120000000',
         parsed_address: addrMatch ? addrMatch[1].trim() : 'Alamat Sesuai Chat WA',
-        parsed_date: dateMatch ? dateMatch[1].trim() : new Date().toISOString().slice(0, 10),
+        parsed_order_date: parsedOrderDate,
+        parsed_date: parsedDelivDate,
         parsed_items: parsedItems,
         parsed_items_json: JSON.stringify(parsedItems),
         status: 'Draft Menunggu Konfirmasi'
@@ -2898,7 +3226,7 @@
         const safeId = String(newDraftId).replace(/[^a-zA-Z0-9_-]/g, '');
         confirmTelegramDraft(newDraftId, safeId);
       } else {
-        showToast('Pesan WA/Telegram berhasil dijadikan Draft! Klik "Konfirmasi Masuk Pesanan".', 'info');
+        showToast(`${parsedItems.length} produk dipakai berhasil difilter${skippedCrossedCount > 0 ? ` (${skippedCrossedCount} bertanda silang diabaikan)` : ''}!`, 'info');
         openTelegramSimulatorModal();
       }
     }
@@ -2915,6 +3243,7 @@
       const custName = (document.getElementById(`drf_name_${domKey}`)?.value || d.parsed_customer || 'Pelanggan WA').trim();
       const custPhone = (document.getElementById(`drf_phone_${domKey}`)?.value || d.parsed_phone || '-').trim();
       const custAddr = (document.getElementById(`drf_addr_${domKey}`)?.value || d.parsed_address || 'Jakarta').trim();
+      const ordDate = document.getElementById(`drf_orddate_${domKey}`)?.value || d.parsed_order_date || new Date().toISOString().slice(0, 10);
       const delivDate = document.getElementById(`drf_date_${domKey}`)?.value || String(d.parsed_date || new Date().toISOString().slice(0, 10)).slice(0, 10);
 
       const newOrderId = `ORD-${Math.floor(261105 + Math.random() * 8900)}`;
@@ -2922,22 +3251,13 @@
       if (itemsList.length === 0 && d.parsed_items_json) {
         try { itemsList = JSON.parse(d.parsed_items_json); } catch (e) { itemsList = []; }
       }
-      if (itemsList.length === 0) {
-        itemsList = [{
-          product_id: generateUID('PRD-WA'),
-          product_name: 'Pesanan WA/Telegram (' + (d.raw_message ? d.raw_message.slice(0, 35) : 'Item Segar') + ')',
-          qty: 1,
-          unit: 'Paket',
-          price: 50000
-        }];
-      }
 
-      const total = itemsList.reduce((acc, it) => acc + (Number(it.qty || 1) * Number(it.price || 25000)), 0);
+      const total = itemsList.reduce((acc, it) => acc + (Number(it.qty || 1) * Number(it.price || 0)), 0);
       const defaultBranchId = (DB.HH_BRANCHES && DB.HH_BRANCHES.length > 0) ? DB.HH_BRANCHES[0].branch_id : 'BR-01';
 
       const newOrderObj = {
         order_id: newOrderId,
-        created_at: nowFormatted(),
+        created_at: ordDate,
         delivery_date: delivDate,
         customer_id: generateUID('CUST'),
         customer_name: custName,
@@ -2949,7 +3269,7 @@
         courier_id: '',
         courier_name: '-',
         total_amount: total,
-        notes: 'Dikonfirmasi dari WA/Telegram (' + draftId + ')',
+        notes: `Tgl Order: ${ordDate}`,
         public_tracking_enabled: true,
         lat: -6.2450 + (Math.random() - 0.5) * 0.03,
         lng: 106.8600 + (Math.random() - 0.5) * 0.03
@@ -2960,7 +3280,7 @@
       const newItems = [];
       itemsList.forEach(it => {
         const qtyVal = Number(it.qty || it.qty_ordered || 1);
-        const priceVal = Number(it.price || 25000);
+        const priceVal = Number(it.price || 0);
         const itemObj = {
           item_id: generateUID('ITM'),
           order_id: newOrderId,
@@ -2969,7 +3289,7 @@
           qty_ordered: qtyVal,
           qty_actual: qtyVal,
           qty_damaged: 0,
-          unit: it.unit || 'Kg',
+          unit: it.unit || 'KG',
           price: priceVal,
           qc_status: 'Pending'
         };
@@ -3115,33 +3435,27 @@
       showToast('Pelanggan dihapus dari Database.', 'info');
     }
 
+    // 3. MENU PRODUK BUAH & SAYUR: HANYA NAMA PRODUK, HARGA, DAN SATUAN (TANPA SKU, KATEGORI, STOK GUDANG)
     function renderProductsView(container) {
       container.innerHTML = `
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
           <div class="flex items-center justify-between">
-            <h3 class="font-extrabold text-sm text-[#053f28]">Katalog Produk Buah & Sayur (CRUD)</h3>
+            <div>
+              <h3 class="font-extrabold text-sm text-[#053f28]">Katalog Produk Buah & Sayur</h3>
+              <p class="text-[11px] text-slate-500">Daftar Nama Produk, Harga, dan Satuan (Kg, Gram, Pcs, Krat, Dus, dll).</p>
+            </div>
             <button onclick="openProductModal()" class="px-3.5 py-2 rounded-xl bg-[#053f28] text-[#fde002] text-xs font-extrabold">+ Tambah Produk</button>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             ${DB.HH_PRODUCTS.map(p => `
               <div class="p-4 rounded-2xl border border-slate-200 hover:border-[#053f28] transition bg-white flex flex-col justify-between">
                 <div>
-                  <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold">
-                    <span>${p.sku}</span>
-                    <span class="px-2 py-0.5 rounded bg-hh-50 text-[#053f28]">${p.category}</span>
-                  </div>
-                  <h4 class="font-extrabold text-sm text-slate-900 mt-2">${p.name}</h4>
-                  <p class="text-base font-black text-[#053f28] mt-1">${formatRupiah(p.price)} <span class="text-xs font-normal text-slate-500">/ ${p.unit}</span></p>
+                  <h4 class="font-extrabold text-sm text-slate-900">${p.name}</h4>
+                  <p class="text-base font-black text-[#053f28] mt-1.5">${formatRupiah(p.price)} <span class="text-xs font-bold text-slate-500">/ ${p.unit}</span></p>
                 </div>
-                <div class="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs">
-                  <div class="flex items-center justify-between">
-                    <span>Stok: <b class="${p.stock <= p.min_stock ? 'text-rose-600' : 'text-slate-800'}">${p.stock} ${p.unit}</b></span>
-                    <span class="text-[11px] text-slate-400">Min: ${p.min_stock}</span>
-                  </div>
-                  <div class="flex gap-1.5 pt-1">
-                    <button onclick="openProductModal('${p.product_id}')" class="flex-1 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-700"><i class="fa-solid fa-pen"></i> Edit</button>
-                    <button onclick="deleteProductCRUD('${p.product_id}')" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 font-bold text-rose-600"><i class="fa-solid fa-trash"></i></button>
-                  </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex gap-1.5 text-xs">
+                  <button onclick="openProductModal('${p.product_id}')" class="flex-1 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-700"><i class="fa-solid fa-pen"></i> Edit</button>
+                  <button onclick="deleteProductCRUD('${p.product_id}')" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 font-bold text-rose-600"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </div>
             `).join('') || `<div class="col-span-4 p-8 text-center text-slate-400">Belum ada produk di Database Spreadsheet.</div>`}
@@ -3152,36 +3466,24 @@
 
     function openProductModal(prodId = '') {
       const existing = DB.HH_PRODUCTS.find(p => p.product_id === prodId);
+      const unitOptions = ['KG', 'Gram', 'Kiloan', 'Pcs', 'Krat', 'Dus', 'Sisir', 'Pack', 'Ikat', 'Buah'];
       openModal(existing ? `Edit Produk ${existing.name}` : 'Tambah Produk Buah / Sayur', `
-        <form onsubmit="saveProductCRUD(event, '${prodId}')" class="space-y-3 text-xs">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="font-bold block mb-1">SKU Produk *</label>
-              <input id="crudProdSku" required value="${existing ? existing.sku : 'BH-NEW-01'}" class="w-full px-3 py-2 rounded-xl border border-slate-200" />
-            </div>
-            <div>
-              <label class="font-bold block mb-1">Kategori</label>
-              <select id="crudProdCat" class="w-full px-3 py-2 rounded-xl border border-slate-200">
-                ${['Buah Lokal', 'Buah Impor', 'Sayuran Daun', 'Sayuran Buah', 'Sayuran Bunga', 'Umbi'].map(c => `<option ${existing && existing.category === c ? 'selected' : ''}>${c}</option>`).join('')}
-              </select>
-            </div>
-          </div>
+        <form onsubmit="saveProductCRUD(event, '${prodId}')" class="space-y-3.5 text-xs">
           <div>
             <label class="font-bold block mb-1">Nama Produk *</label>
-            <input id="crudProdName" required value="${existing ? existing.name : ''}" placeholder="Mangga Harum Manis Super" class="w-full px-3 py-2 rounded-xl border border-slate-200" />
+            <input id="crudProdName" required value="${existing ? existing.name : ''}" placeholder="Contoh: Apple Granny Smith China" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 font-bold" />
           </div>
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="font-bold block mb-1">Satuan *</label>
-              <input id="crudProdUnit" required value="${existing ? existing.unit : 'Kg'}" class="w-full px-3 py-2 rounded-xl border border-slate-200" />
-            </div>
+          <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="font-bold block mb-1">Harga (Rp) *</label>
-              <input id="crudProdPrice" type="number" required value="${existing ? existing.price : 25000}" class="w-full px-3 py-2 rounded-xl border border-slate-200" />
+              <input id="crudProdPrice" type="number" required value="${existing ? existing.price : 25000}" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 font-bold" />
             </div>
             <div>
-              <label class="font-bold block mb-1">Stok Gudang *</label>
-              <input id="crudProdStock" type="number" required value="${existing ? existing.stock : 100}" class="w-full px-3 py-2 rounded-xl border border-slate-200" />
+              <label class="font-bold block mb-1">Satuan *</label>
+              <input id="crudProdUnit" list="unitListOptions" required value="${existing ? existing.unit : 'KG'}" placeholder="KG / Gram / Pcs / Krat / Dus" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 font-bold" />
+              <datalist id="unitListOptions">
+                ${unitOptions.map(u => `<option value="${u}"></option>`).join('')}
+              </datalist>
             </div>
           </div>
           <button type="submit" class="w-full py-2.5 rounded-xl bg-[#053f28] text-[#fde002] font-extrabold">Simpan Produk ke Database</button>
@@ -3191,24 +3493,27 @@
 
     function saveProductCRUD(e, prodId) {
       e.preventDefault();
-      const sku = document.getElementById('crudProdSku').value.trim();
-      const category = document.getElementById('crudProdCat').value;
       const name = document.getElementById('crudProdName').value.trim();
       const unit = document.getElementById('crudProdUnit').value.trim();
       const price = Number(document.getElementById('crudProdPrice').value);
-      const stock = Number(document.getElementById('crudProdStock').value);
 
       let targetProd = null;
       if (prodId) {
         const p = DB.HH_PRODUCTS.find(x => x.product_id === prodId);
         if (p) {
-          p.sku = sku; p.category = category; p.name = name; p.unit = unit; p.price = price; p.stock = stock;
+          p.name = name; p.unit = unit; p.price = price;
           targetProd = p;
         }
       } else {
         targetProd = {
           product_id: generateUID('PRD'),
-          sku, name, category, unit, price, stock, min_stock: 20
+          sku: '-',
+          name,
+          category: '-',
+          unit,
+          price,
+          stock: 0,
+          min_stock: 0
         };
         DB.HH_PRODUCTS.push(targetProd);
       }
